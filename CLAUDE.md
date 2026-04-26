@@ -19,7 +19,7 @@ A fully automated job application pipeline. Find fresh SWE jobs (< 24h old, US/R
 
 Implement in this order, completing and testing each step before proceeding:
 
-- [ ] Step 1: Monorepo scaffold + Prisma schema + Neon connection
+- [x] Step 1: Monorepo scaffold + Prisma schema + Neon connection
 - [ ] Step 2: NextAuth.js (Google + GitHub OAuth)
 - [ ] Step 3: AI provider abstraction + resume parsing
 - [ ] Step 4: POST /api/jobs/ingest route
