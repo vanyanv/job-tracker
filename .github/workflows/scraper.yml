@@ -1,0 +1,49 @@
+name: scraper
+
+on:
+  schedule:
+    - cron: "0 */2 * * *"
+  workflow_dispatch:
+    inputs:
+      hoursWindow:
+        description: "How many hours back to scan (default 24)"
+        required: false
+        default: "24"
+
+concurrency:
+  group: scraper
+  cancel-in-progress: false
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: scraper
+    env:
+      VERCEL_URL: ${{ secrets.VERCEL_URL }}
+      INGEST_BEARER_TOKEN: ${{ secrets.INGEST_BEARER_TOKEN }}
+      BLOB_READ_WRITE_TOKEN: ${{ secrets.BLOB_READ_WRITE_TOKEN }}
+      SCRAPER_HOURS_WINDOW: ${{ inputs.hoursWindow || '24' }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.15.0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install scraper deps
+        run: pnpm install --frozen-lockfile --filter scraper...
+        working-directory: .
+
+      - name: Install Playwright Chromium
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Run scraper
+        run: pnpm start
