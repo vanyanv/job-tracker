@@ -9,6 +9,7 @@
     "test:live": "SCRAPER_LIVE_TEST=1 vitest run"
   },
   "dependencies": {
+    "@vercel/blob": "^2.3.3",
     "p-limit": "^6.2.0",
     "playwright": "^1.40.0"
   },

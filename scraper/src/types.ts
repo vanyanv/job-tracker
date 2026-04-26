@@ -8,5 +8,5 @@ export interface JobRecord {
   description: string | null;
   source: JobSource;
   postedAt: string;
-  snapshotUrl: null;
+  snapshotUrl: string | null;
 }

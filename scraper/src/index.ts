@@ -3,6 +3,7 @@ import { scrapeGreenhouse } from "./scrapers/greenhouse.js";
 import { scrapeLever } from "./scrapers/lever.js";
 import { filterJobs } from "./utils/filter.js";
 import { ingestJobs } from "./utils/ingest.js";
+import { snapshotJobs } from "./utils/snapshot.js";
 import type { JobRecord } from "./types.js";
 
 async function main(): Promise<void> {
@@ -52,7 +53,11 @@ async function main(): Promise<void> {
     process.exit(0);
   }
 
-  const { sent, errors } = await ingestJobs(filtered);
+  const snapshotted = await snapshotJobs(filtered);
+  const withSnapshots = snapshotted.filter((j) => j.snapshotUrl !== null).length;
+  console.log(`[scraper] snapshots=${withSnapshots}/${snapshotted.length}`);
+
+  const { sent, errors } = await ingestJobs(snapshotted);
   console.log(`[scraper] ingested=${sent} ingest-errors=${errors}`);
   process.exit(0);
 }

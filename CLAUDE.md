@@ -3,7 +3,7 @@
 ## What This Is
 A fully automated job application pipeline. Find fresh SWE jobs (< 24h old, US/Remote) on Ashby, Greenhouse, and Lever → score them against your resume → batch-apply via Simplify → auto-mark as applied via Chrome extension → monitor Gmail for rejections/interviews → flag no-response jobs after 7 days.
 
-**Entirely free to run** using Vercel + Neon + GitHub Actions + Cloudflare R2 free tiers.
+**Entirely free to run** using Vercel + Neon + GitHub Actions + Vercel Blob free tiers.
 
 ## Architecture Summary
 - **web/** — Next.js App Router → deployed on Vercel (free tier)
@@ -11,7 +11,7 @@ A fully automated job application pipeline. Find fresh SWE jobs (< 24h old, US/R
 - **extension/** — Chrome Extension MV3 → auto-detects ATS confirmation pages, marks applied
 - **.github/workflows/** — scraper.yml + email-sync.yml, cron every 2h (use public repo for free minutes)
 - **Neon Postgres** via Prisma ORM
-- **Cloudflare R2** for PDF job snapshots (10 GB free)
+- **Vercel Blob** for PDF job snapshots (1 GB / 10 GB egress free)
 - **GitHub Actions** as the only background job runner
 
 ## Implementation Status
@@ -24,7 +24,7 @@ Implement in this order, completing and testing each step before proceeding:
 - [x] Step 3: AI provider abstraction + resume parsing
 - [x] Step 4: POST /api/jobs/ingest route
 - [x] Step 5: Scraper (Ashby + Greenhouse + Lever)
-- [ ] Step 6: Cloudflare R2 PDF snapshots
+- [x] Step 6: Vercel Blob PDF snapshots
 - [ ] Step 7: GitHub Actions workflows
 - [ ] Step 8: Settings page (per-user credentials)
 - [ ] Step 9: Gmail OAuth + email sync
@@ -75,20 +75,13 @@ GOOGLE_CLIENT_SECRET
 INGEST_BEARER_TOKEN       # GH Actions → /api/jobs/ingest
 EMAIL_SYNC_BEARER_TOKEN   # GH Actions → /api/email/sync
 ENCRYPTION_KEY            # 32-byte hex for AES-256-GCM
-R2_ACCOUNT_ID
-R2_ACCESS_KEY_ID
-R2_SECRET_ACCESS_KEY
-R2_BUCKET_NAME
-R2_PUBLIC_URL
+BLOB_READ_WRITE_TOKEN     # Vercel Blob (PDF snapshots)
 
 # GitHub Actions Secrets (same values)
 VERCEL_URL
 INGEST_BEARER_TOKEN
 EMAIL_SYNC_BEARER_TOKEN
-R2_ACCOUNT_ID
-R2_ACCESS_KEY_ID
-R2_SECRET_ACCESS_KEY
-R2_BUCKET_NAME
+BLOB_READ_WRITE_TOKEN
 ```
 
 ## Monorepo Structure
@@ -106,12 +99,12 @@ job-tracker/
         email/sync/ + connect/
     lib/
       ai/provider.ts + groq.ts + gemini.ts + rules.ts + claude.ts
-      gmail.ts + r2.ts + crypto.ts + prisma.ts
+      gmail.ts + crypto.ts + prisma.ts
     prisma/schema.prisma
   scraper/
     src/
       scrapers/ashby.ts + greenhouse.ts + lever.ts
-      utils/filter.ts + pdf.ts + r2.ts + ingest.ts
+      utils/filter.ts + ingest.ts + snapshot.ts
       index.ts
   extension/
     manifest.json + content.js + background.js + options.html + popup.html
