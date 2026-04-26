@@ -29,12 +29,12 @@ Implement in this order, completing and testing each step before proceeding:
 - [x] Step 5: Scraper (Ashby + Greenhouse + Lever)
 - [x] Step 6: Vercel Blob PDF snapshots
 - [x] Step 7: GitHub Actions workflows (scraper.yml — email-sync.yml deferred to Step 9)
-- [ ] Step 8: Settings page (per-user credentials) **use tasteskill for all design work**
-- [ ] Step 9: Gmail OAuth + email sync
-- [ ] Step 10: Dashboard shell + job feed **use tasteskill for all design work**
-- [ ] Step 11: Chrome extension
-- [ ] Step 12: Batch apply queue UI **use tasteskill for all design work**
-- [ ] Step 13: Analytics page **use tasteskill for all design work**
+- [x] Step 8: Settings page (per-user credentials) **use tasteskill for all design work**
+- [x] Step 9: Gmail OAuth + email sync
+- [x] Step 10: Dashboard shell + job feed **use tasteskill for all design work**
+- [x] Step 11: Chrome extension
+- [x] Step 12: Batch apply queue UI **use tasteskill for all design work**
+- [x] Step 13: Analytics page **use tasteskill for all design work**
 
 **Each step: implement → run test → test passes → move to next step.**
 **use tasteskill for all design work**
