@@ -1,0 +1,7 @@
+export default function Home() {
+  return (
+    <main>
+      <h1>Job Tracker</h1>
+    </main>
+  );
+}
