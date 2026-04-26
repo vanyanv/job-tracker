@@ -22,7 +22,7 @@ Implement in this order, completing and testing each step before proceeding:
 - [x] Step 1: Monorepo scaffold + Prisma schema + Neon connection
 - [x] Step 2: NextAuth.js (Google + GitHub OAuth)
 - [x] Step 3: AI provider abstraction + resume parsing
-- [ ] Step 4: POST /api/jobs/ingest route
+- [x] Step 4: POST /api/jobs/ingest route
 - [ ] Step 5: Scraper (Ashby + Greenhouse + Lever)
 - [ ] Step 6: Cloudflare R2 PDF snapshots
 - [ ] Step 7: GitHub Actions workflows
