@@ -33,7 +33,7 @@ async function fetchOrgGreenhouse(org: string): Promise<JobRecord[]> {
         location: j.location?.name ?? "",
         description: stripHtml(j.content ?? ""),
         source: "greenhouse",
-        postedAt: j.updated_at,
+        postedAt: new Date(j.updated_at).toISOString(),
         snapshotUrl: null,
       }));
   } catch (err) {

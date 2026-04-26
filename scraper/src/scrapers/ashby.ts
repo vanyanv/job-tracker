@@ -30,7 +30,7 @@ async function fetchOrgAshby(org: string): Promise<JobRecord[]> {
         location: j.location || j.workplaceType || "",
         description: j.descriptionPlain ?? null,
         source: "ashby",
-        postedAt: j.publishedAt!,
+        postedAt: new Date(j.publishedAt!).toISOString(),
         snapshotUrl: null,
       }));
   } catch (err) {
