@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Job Tracker</title>
+    <style>
+      :root {
+        color-scheme: light dark;
+        --bg: #ffffff;
+        --fg: #18181b;
+        --muted: #71717a;
+        --border: rgba(0, 0, 0, 0.08);
+        --accent: #047857;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg: #0a0a0a;
+          --fg: #fafafa;
+          --muted: #a1a1aa;
+          --border: rgba(255, 255, 255, 0.1);
+          --accent: #34d399;
+        }
+      }
+      html, body { margin: 0; padding: 0; }
+      body {
+        font: 13px/1.45 ui-sans-serif, -apple-system, "Segoe UI", system-ui, sans-serif;
+        background: var(--bg);
+        color: var(--fg);
+        width: 280px;
+      }
+      .wrap { padding: 16px 16px 14px; }
+      .row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px 0;
+        border-bottom: 1px solid var(--border);
+      }
+      .row:last-of-type { border-bottom: 0; }
+      .dot {
+        width: 7px;
+        height: 7px;
+        border-radius: 999px;
+        background: var(--muted);
+        flex-shrink: 0;
+      }
+      .dot.ok { background: var(--accent); box-shadow: 0 0 0 3px color-mix(in oklch, var(--accent) 22%, transparent); }
+      .dot.warn { background: #f59e0b; }
+      .label { font-weight: 500; }
+      .sub { color: var(--muted); font-size: 11px; }
+      h1 {
+        font-size: 13px;
+        font-weight: 500;
+        letter-spacing: -0.01em;
+        margin: 0 0 2px;
+      }
+      .eyebrow {
+        font-family: ui-monospace, "JetBrains Mono", Menlo, monospace;
+        font-size: 9px;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        color: var(--muted);
+      }
+      footer {
+        display: flex;
+        gap: 6px;
+        padding: 12px 16px;
+        border-top: 1px solid var(--border);
+      }
+      button {
+        appearance: none;
+        font: inherit;
+        font-size: 12px;
+        cursor: pointer;
+        padding: 7px 11px;
+        border-radius: 8px;
+        border: 1px solid var(--border);
+        background: transparent;
+        color: var(--fg);
+        transition: background 100ms ease, transform 60ms ease;
+      }
+      button:hover { background: rgba(0, 0, 0, 0.04); }
+      @media (prefers-color-scheme: dark) {
+        button:hover { background: rgba(255, 255, 255, 0.06); }
+      }
+      button:active { transform: translateY(1px); }
+      button.primary { background: var(--fg); color: var(--bg); border-color: transparent; }
+      button.primary:hover { opacity: 0.92; }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <div class="eyebrow">Extension</div>
+      <h1>Job Tracker</h1>
+      <div class="row">
+        <span class="dot" id="cfgDot"></span>
+        <div>
+          <div class="label" id="cfgLabel">Checking…</div>
+          <div class="sub" id="cfgSub"></div>
+        </div>
+      </div>
+      <div class="row">
+        <span class="dot ok"></span>
+        <div>
+          <div class="label">Active on</div>
+          <div class="sub">Ashby · Greenhouse · Lever</div>
+        </div>
+      </div>
+    </div>
+    <footer>
+      <button id="open">Open dashboard</button>
+      <button id="opts" class="primary">Settings</button>
+    </footer>
+    <script src="popup.js"></script>
+  </body>
+</html>

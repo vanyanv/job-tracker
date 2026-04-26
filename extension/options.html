@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Job Tracker — options</title>
+    <style>
+      :root {
+        color-scheme: light dark;
+        --bg: #fafafa;
+        --fg: #18181b;
+        --muted: #71717a;
+        --border: rgba(0, 0, 0, 0.08);
+        --card: #ffffff;
+        --accent: #047857;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg: #0a0a0a;
+          --fg: #fafafa;
+          --muted: #a1a1aa;
+          --border: rgba(255, 255, 255, 0.1);
+          --card: #111113;
+          --accent: #34d399;
+        }
+      }
+      * { box-sizing: border-box; }
+      html, body { margin: 0; padding: 0; }
+      body {
+        font: 13px/1.5 ui-sans-serif, -apple-system, "Segoe UI", system-ui, sans-serif;
+        background: var(--bg);
+        color: var(--fg);
+        padding: 40px 24px;
+      }
+      .wrap { max-width: 540px; margin: 0 auto; }
+      h1 {
+        font-size: 24px;
+        font-weight: 500;
+        letter-spacing: -0.02em;
+        margin: 0 0 4px;
+      }
+      .eyebrow {
+        font-family: ui-monospace, "JetBrains Mono", Menlo, monospace;
+        font-size: 10px;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        color: var(--muted);
+      }
+      p.lede {
+        margin: 12px 0 28px;
+        color: var(--muted);
+        max-width: 48ch;
+      }
+      form {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: 24px;
+      }
+      .field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 18px; }
+      label {
+        font-size: 12px;
+        font-weight: 500;
+        letter-spacing: 0.01em;
+      }
+      .hint { font-size: 11px; color: var(--muted); }
+      input {
+        appearance: none;
+        font: inherit;
+        background: transparent;
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 9px 11px;
+        color: var(--fg);
+        outline: none;
+        transition: border-color 120ms ease;
+      }
+      input:focus { border-color: var(--accent); }
+      .actions { display: flex; gap: 8px; align-items: center; margin-top: 6px; }
+      button {
+        appearance: none;
+        cursor: pointer;
+        font: inherit;
+        font-weight: 500;
+        background: var(--fg);
+        color: var(--bg);
+        border: 0;
+        border-radius: 10px;
+        padding: 9px 14px;
+        transition: transform 60ms ease, opacity 120ms ease;
+      }
+      button:active { transform: translateY(1px); }
+      button.secondary {
+        background: transparent;
+        color: var(--muted);
+        border: 1px solid var(--border);
+      }
+      .status {
+        font-family: ui-monospace, monospace;
+        font-size: 11px;
+        color: var(--muted);
+        margin-left: auto;
+      }
+      .status.ok { color: var(--accent); }
+      .status.err { color: #dc2626; }
+      .footer {
+        margin-top: 24px;
+        font-size: 11px;
+        color: var(--muted);
+        line-height: 1.7;
+      }
+      kbd {
+        font-family: ui-monospace, monospace;
+        font-size: 10px;
+        background: rgba(0,0,0,0.04);
+        border: 1px solid var(--border);
+        border-radius: 4px;
+        padding: 1px 5px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <div class="eyebrow">Extension settings</div>
+      <h1>Job Tracker</h1>
+      <p class="lede">
+        Connect this extension to your tracker. After you submit a job application on Ashby,
+        Greenhouse, or Lever, the extension will mark it applied automatically.
+      </p>
+
+      <form id="cfg">
+        <div class="field">
+          <label for="apiBase">API base URL</label>
+          <input id="apiBase" type="url" placeholder="https://your-app.vercel.app" required />
+          <span class="hint">Where your Next.js deployment lives. No trailing slash.</span>
+        </div>
+
+        <div class="field">
+          <label for="apiKey">API key</label>
+          <input id="apiKey" type="password" placeholder="cuid…" autocomplete="off" required />
+          <span class="hint">Copy from the tracker → Settings → Extension key.</span>
+        </div>
+
+        <div class="actions">
+          <button type="submit">Save</button>
+          <button type="button" id="test" class="secondary">Test connection</button>
+          <span class="status" id="status"></span>
+        </div>
+      </form>
+
+      <p class="footer">
+        On a confirmation page, the extension fires once per posting. If a job isn't in your pipeline
+        yet, you'll get a "not found" notification — the scraper picks fresh postings every 2 hours.
+      </p>
+    </div>
+    <script src="options.js"></script>
+  </body>
+</html>
