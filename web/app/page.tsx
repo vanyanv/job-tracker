@@ -1,7 +1,7 @@
-export default function Home() {
-  return (
-    <main>
-      <h1>Job Tracker</h1>
-    </main>
-  );
+import { redirect } from "next/navigation";
+import { auth } from "@/auth";
+
+export default async function Home() {
+  const session = await auth();
+  redirect(session?.user?.email ? "/dashboard" : "/signin");
 }

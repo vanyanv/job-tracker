@@ -6,3 +6,9 @@ dist/
 .next/
 *.tsbuildinfo
 prisma/migrations/
+
+# Playwright MCP artifacts
+.playwright-mcp/
+
+# Local screenshots
+settings-*.png
