@@ -1,0 +1,8 @@
+{
+  "manifest_version": 3,
+  "name": "Job Tracker",
+  "version": "0.0.1",
+  "description": "Auto-marks job applications as applied",
+  "permissions": [],
+  "host_permissions": []
+}
