@@ -23,7 +23,7 @@ Implement in this order, completing and testing each step before proceeding:
 - [x] Step 2: NextAuth.js (Google + GitHub OAuth)
 - [x] Step 3: AI provider abstraction + resume parsing
 - [x] Step 4: POST /api/jobs/ingest route
-- [ ] Step 5: Scraper (Ashby + Greenhouse + Lever)
+- [x] Step 5: Scraper (Ashby + Greenhouse + Lever)
 - [ ] Step 6: Cloudflare R2 PDF snapshots
 - [ ] Step 7: GitHub Actions workflows
 - [ ] Step 8: Settings page (per-user credentials)
