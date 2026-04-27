@@ -22,10 +22,8 @@ export function SectionHeader({
       )}
     >
       <div className="min-w-0">
-        <div className="font-mono text-[10px] uppercase tracking-[0.22em] text-muted-foreground">
-          {eyebrow}
-        </div>
-        <h2 className="mt-2.5 font-display text-2xl font-medium tracking-tight text-foreground md:text-[28px]">
+        <div className="label-caps text-muted-foreground">{eyebrow}</div>
+        <h2 className="mt-2.5 font-display italic text-[24px] font-medium tracking-tight text-foreground md:text-[28px]">
           {title}
         </h2>
         <p className="mt-2 max-w-[58ch] text-[13.5px] leading-relaxed text-muted-foreground">

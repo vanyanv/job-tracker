@@ -14,7 +14,6 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Topbar } from "@/app/_components/topbar";
-import { WarmGlow } from "@/app/_components/warm-glow";
 import type { ResumeProfile } from "@/lib/ai/provider";
 import { AiProviderSection } from "./ai-provider-section";
 import { ResumeSection } from "./resume-section";
@@ -85,10 +84,8 @@ export function SettingsShell({ user }: { user: SettingsUser }) {
     <div className="relative min-h-dvh bg-background text-foreground">
       <Topbar user={user} active="settings" />
 
-      <div className="relative mx-auto max-w-[1280px] px-4 pt-10 pb-16 md:px-8 md:pt-14 md:pb-24">
-        <WarmGlow position="top-right" size="lg" hue="apricot" className="opacity-70" />
-
-        <div className="grid grid-cols-1 gap-10 lg:grid-cols-[300px_1fr] lg:gap-14">
+      <div className="relative mx-auto max-w-[1280px] px-4 pt-8 pb-16 md:px-8 md:pt-12 md:pb-24">
+        <div className="grid grid-cols-1 gap-10 lg:grid-cols-[280px_1fr] lg:gap-12">
           <aside className="lg:sticky lg:top-24 lg:self-start">
             <Link
               href="/dashboard"
@@ -98,10 +95,8 @@ export function SettingsShell({ user }: { user: SettingsUser }) {
               Pipeline
             </Link>
 
-            <div className="mt-5 font-mono text-[10px] uppercase tracking-[0.22em] text-muted-foreground">
-              Configure
-            </div>
-            <h1 className="hearth-enter mt-3 font-display text-[44px] leading-[1.04] tracking-tight md:text-[52px]">
+            <div className="mt-5 label-caps text-muted-foreground">Configure</div>
+            <h1 className="hearth-enter mt-2 font-display italic text-[42px] leading-[1.04] tracking-tight md:text-[48px]">
               Settings.
             </h1>
             <p className="mt-3 max-w-[28ch] text-[13.5px] leading-relaxed text-muted-foreground">
@@ -123,7 +118,7 @@ export function SettingsShell({ user }: { user: SettingsUser }) {
                     key={s.id}
                     onClick={() => setActive(s.id)}
                     className={cn(
-                      "press-feedback group/nav relative flex items-start gap-3 rounded-2xl px-3 py-3 text-left",
+                      "press-feedback group/nav relative flex items-start gap-3 rounded-md px-3 py-3 text-left",
                       "transition-[background-color,color] duration-200 ease-out",
                       isActive
                         ? "surface"
@@ -132,9 +127,9 @@ export function SettingsShell({ user }: { user: SettingsUser }) {
                   >
                     <span
                       className={cn(
-                        "mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-xl transition-colors duration-200",
+                        "mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-sm transition-colors duration-200",
                         isActive
-                          ? "bg-apricot/15 text-apricot"
+                          ? "bg-apricot/30 text-foreground"
                           : "surface-sunken text-muted-foreground group-hover/nav:text-foreground",
                       )}
                     >
@@ -162,7 +157,7 @@ export function SettingsShell({ user }: { user: SettingsUser }) {
                       </span>
                     </span>
                     {isActive && (
-                      <span className="absolute left-0 top-1/2 h-6 w-[2px] -translate-y-1/2 rounded-r-full bg-apricot" />
+                      <span className="absolute left-0 top-1/2 h-6 w-[2px] -translate-y-1/2 rounded-r-sm bg-apricot" />
                     )}
                   </button>
                 );
@@ -171,7 +166,7 @@ export function SettingsShell({ user }: { user: SettingsUser }) {
           </aside>
 
           <main className="min-w-0">
-            <div className="overflow-hidden rounded-3xl surface">
+            <div className="overflow-hidden rounded-md surface">
               {active === "ai" && (
                 <AiProviderSection
                   provider={state.aiProvider}

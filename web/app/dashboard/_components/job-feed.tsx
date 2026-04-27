@@ -118,7 +118,7 @@ export function JobFeed({
           />
         </div>
 
-        <div className="inline-flex items-center gap-0.5 rounded-full surface-sunken p-1">
+        <div className="inline-flex items-center gap-0.5 rounded-md surface-sunken p-1">
           <SegmentChip active={sort === "score"} onClick={() => setSort("score")}>
             Score
           </SegmentChip>
@@ -127,7 +127,7 @@ export function JobFeed({
           </SegmentChip>
         </div>
 
-        <div className="inline-flex items-center gap-0.5 rounded-full surface-sunken p-1">
+        <div className="inline-flex items-center gap-0.5 rounded-md surface-sunken p-1">
           {[0, 60, 80].map((n) => (
             <SegmentChip
               key={n}
@@ -183,10 +183,10 @@ function SegmentChip({
     <button
       onClick={onClick}
       className={cn(
-        "rounded-full px-3 py-1.5 text-xs font-medium transition-colors duration-150",
+        "rounded-sm px-3 py-1 text-[12px] font-medium transition-colors duration-150",
         mono && "font-mono text-[11px] tabular-nums",
         active
-          ? "bg-card text-foreground shadow-[inset_0_1px_0_oklch(1_0_0/8%),0_2px_8px_-3px_oklch(0_0_0/30%)]"
+          ? "bg-card text-foreground shadow-[inset_0_1px_0_oklch(1_0_0/10%),0_2px_8px_-3px_oklch(0_0_0/15%)]"
           : "text-muted-foreground hover:text-foreground",
       )}
     >
@@ -201,7 +201,7 @@ function SkeletonList() {
       {Array.from({ length: 6 }).map((_, i) => (
         <li
           key={i}
-          className="flex items-center gap-4 rounded-2xl surface px-4 py-4"
+          className="flex items-center gap-4 rounded-md surface px-4 py-4"
         >
           <div className="size-11 shrink-0 animate-pulse rounded-full bg-foreground/4" />
           <div className="flex-1 space-y-2">
@@ -216,12 +216,12 @@ function SkeletonList() {
 
 function EmptyState() {
   return (
-    <div className="flex flex-col items-center justify-center gap-4 rounded-2xl border border-dashed border-foreground/12 bg-foreground/[0.012] px-6 py-20 text-center">
-      <span className="flex size-12 items-center justify-center rounded-2xl surface-sunken">
+    <div className="flex flex-col items-center justify-center gap-4 rounded-md border border-dashed border-foreground/12 bg-foreground/[0.012] px-6 py-20 text-center">
+      <span className="flex size-12 items-center justify-center rounded-md surface-sunken">
         <Inbox className="size-5 text-muted-foreground" strokeWidth={1.5} />
       </span>
       <div>
-        <div className="font-display text-lg leading-snug">Nothing here yet</div>
+        <div className="font-display italic text-lg leading-snug">Nothing here yet</div>
         <p className="mt-1.5 max-w-[40ch] text-[13px] leading-relaxed text-muted-foreground">
           The scraper runs every two hours. Fresh roles will land here once your
           resume and AI provider are configured.
@@ -233,7 +233,7 @@ function EmptyState() {
 
 function ErrorState({ message }: { message: string }) {
   return (
-    <div className="rounded-2xl border border-rose-warm/25 bg-rose-warm/8 px-4 py-3 text-sm text-rose-warm">
+    <div className="rounded-md border border-rose-warm/25 bg-rose-warm/8 px-4 py-3 text-sm text-rose-warm">
       {message}
     </div>
   );

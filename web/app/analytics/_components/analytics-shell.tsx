@@ -26,8 +26,6 @@ import {
 } from "@/components/ui/chart";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Topbar } from "@/app/_components/topbar";
-import { WarmGlow } from "@/app/_components/warm-glow";
-import { StatTile } from "@/app/_components/stat-tile";
 import { cn } from "@/lib/utils";
 
 type DashboardUser = {
@@ -61,10 +59,9 @@ const SOURCE_LABEL: Record<string, string> = {
   lever: "Lever",
 };
 
-const APRICOT = "oklch(0.68 0.22 260)";
-const APRICOT_SOFT = "oklch(0.68 0.22 260 / 55%)";
-const APRICOT_FAINT = "oklch(0.68 0.22 260 / 28%)";
-const SAGE = "oklch(0.71 0.14 157)";
+const APRICOT = "var(--apricot)";
+const SAGE = "var(--sage)";
+const CORNFLOWER = "var(--cornflower)";
 
 export function AnalyticsShell({
   user,
@@ -88,93 +85,164 @@ export function AnalyticsShell({
     <div className="relative min-h-dvh bg-background text-foreground">
       <Topbar user={user} active="analytics" />
 
-      <div className="relative mx-auto max-w-[1400px] px-4 pt-10 pb-16 md:px-8 md:pt-14 md:pb-24">
-        {/* Hero — editorial KPI */}
-        <section className="relative mb-12 md:mb-16">
-          <WarmGlow position="top-right" size="xl" hue="apricot" />
-          <WarmGlow position="top-left" size="md" hue="sage" className="opacity-50" />
-
-          <div className="font-mono text-[10px] uppercase tracking-[0.22em] text-muted-foreground">
+      <div className="relative mx-auto max-w-[1280px] px-4 pt-8 pb-16 md:px-8 md:pt-12 md:pb-24">
+        {/* Editorial KPI hero — two oversized stats divided by hairline */}
+        <section className="hearth-enter bento-stage-1">
+          <div className="label-caps text-muted-foreground">
             Performance · last 90 days
           </div>
 
-          <div className="mt-6 grid grid-cols-1 items-end gap-10 md:grid-cols-[1.1fr_1fr]">
-            <div>
-              <h1 className="hearth-enter font-display text-[80px] leading-[0.95] tracking-tight tabular-nums md:text-[120px]">
-                <span className={cn(responsePct > 0 ? "text-apricot" : "text-foreground/70")}>
-                  {responsePct}
-                </span>
-                <span className="text-foreground/40">%</span>
-              </h1>
-              <p className="mt-4 max-w-[36ch] text-[14px] leading-relaxed text-muted-foreground">
-                <span className="text-foreground">Response rate.</span>{" "}
-                {metrics.submitted === 0
-                  ? "Apply to a few jobs to start seeing your conversion data here."
-                  : `${metrics.totalInterview + metrics.totalRejected} replies across ${metrics.submitted} application${metrics.submitted === 1 ? "" : "s"}.`}
-              </p>
-            </div>
-
-            {/* KPI tiles */}
-            <div className="grid grid-cols-2 gap-3">
-              <StatTile
-                label="Last 7 days"
-                value={metrics.last7}
-                tone={metrics.last7 > 0 ? "apricot" : "default"}
-                caption={metrics.last7 === 1 ? "application" : "applications"}
-                display
-                delay={0}
-              />
-              <StatTile
-                label="Interview rate"
-                value={`${interviewPct}%`}
-                tone={metrics.totalInterview > 0 ? "amber" : "default"}
-                caption={`${metrics.totalInterview} interview${metrics.totalInterview === 1 ? "" : "s"}`}
-                display
-                delay={45}
-              />
-              <StatTile
-                label="Avg score"
-                value={metrics.avgAppliedScore == null ? "—" : metrics.avgAppliedScore}
-                tone="default"
-                caption="across submitted apps"
-                display
-                delay={90}
-              />
-              <StatTile
-                label="Submitted"
-                value={metrics.submitted}
-                tone={metrics.submitted > 0 ? "sage" : "default"}
-                caption="all time"
-                display
-                delay={135}
-              />
-            </div>
+          <div className="mt-6 grid grid-cols-1 gap-y-8 md:grid-cols-2 md:divide-x md:divide-border">
+            <KpiHero
+              value={responsePct}
+              suffix="%"
+              label="Response rate"
+              accent="apricot"
+              subtitle={
+                metrics.submitted === 0
+                  ? "Apply to start tracking conversion."
+                  : `${metrics.totalInterview + metrics.totalRejected} replies · ${metrics.submitted} submitted`
+              }
+            />
+            <KpiHero
+              value={interviewPct}
+              suffix="%"
+              label="Interview rate"
+              accent="amber"
+              subtitle={
+                metrics.totalInterview === 0
+                  ? "No interview conversions yet."
+                  : `${metrics.totalInterview} interview${metrics.totalInterview === 1 ? "" : "s"} so far`
+              }
+              indented
+            />
           </div>
         </section>
 
-        {/* Asymmetric grid */}
-        <div className="space-y-6">
+        {/* Secondary KPI bento — 4 small tiles */}
+        <section className="hearth-enter bento-stage-2 mt-10 grid grid-cols-2 gap-3 md:grid-cols-4">
+          <SmallKpi label="Last 7 days" value={metrics.last7} accent="apricot" caption={metrics.last7 === 1 ? "application" : "applications"} />
+          <SmallKpi label="Submitted" value={metrics.submitted} accent="sage" caption="all time" />
+          <SmallKpi
+            label="Avg score"
+            value={metrics.avgAppliedScore == null ? "—" : metrics.avgAppliedScore}
+            accent="cornflower"
+            caption="across submitted"
+          />
+          <SmallKpi label="Pipeline" value={metrics.totalAll} caption="ingested all time" />
+        </section>
+
+        {/* Velocity full-width */}
+        <section className="hearth-enter bento-stage-3 mt-10">
           <VelocityCard data={velocity} />
+        </section>
 
-          <FunnelCard metrics={metrics} />
-
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-12">
-            <div className="md:col-span-7">
-              <HistogramCard data={histogram} />
-            </div>
-            <div className="md:col-span-5">
-              <SourceCard data={sources} />
-            </div>
+        {/* Funnel + 3-up bento below */}
+        <section className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-12">
+          <div className="hearth-enter bento-stage-4 md:col-span-12">
+            <FunnelCard metrics={metrics} />
           </div>
 
-          <CompaniesCard data={topCompanies} />
-        </div>
+          <div className="hearth-enter bento-stage-5 md:col-span-7">
+            <HistogramCard data={histogram} />
+          </div>
+          <div className="hearth-enter bento-stage-5 md:col-span-5">
+            <SourceCard data={sources} />
+          </div>
+
+          <div className="hearth-enter bento-stage-6 md:col-span-12">
+            <CompaniesCard data={topCompanies} />
+          </div>
+        </section>
       </div>
     </div>
   );
 }
 
-/* ── Velocity (AreaChart + Tabs) ── */
+/* ── Hero KPI ── */
+
+function KpiHero({
+  value,
+  suffix,
+  label,
+  subtitle,
+  accent,
+  indented,
+}: {
+  value: number | string;
+  suffix?: string;
+  label: string;
+  subtitle: string;
+  accent: "apricot" | "amber" | "sage";
+  indented?: boolean;
+}) {
+  const tone =
+    accent === "apricot"
+      ? "text-foreground"
+      : accent === "amber"
+        ? "text-amber-warm"
+        : "text-sage";
+
+  return (
+    <div className={cn(indented && "md:pl-10")}>
+      <div className="label-caps text-muted-foreground">{label}</div>
+      <div className="mt-3 flex items-baseline">
+        <span
+          className={cn(
+            "font-display italic font-medium leading-[0.92] tracking-tight tnum text-[88px] md:text-[112px]",
+            tone,
+          )}
+        >
+          {value}
+        </span>
+        {suffix && (
+          <span className="ml-1 font-display italic text-[40px] text-foreground/45 md:text-[56px]">
+            {suffix}
+          </span>
+        )}
+      </div>
+      <p className="mt-3 max-w-[40ch] text-[13.5px] leading-relaxed text-muted-foreground">
+        {subtitle}
+      </p>
+    </div>
+  );
+}
+
+function SmallKpi({
+  label,
+  value,
+  caption,
+  accent,
+}: {
+  label: string;
+  value: number | string;
+  caption?: string;
+  accent?: "apricot" | "sage" | "amber" | "cornflower";
+}) {
+  const edge =
+    accent === "apricot"
+      ? "edge-highlight-apricot"
+      : accent === "sage"
+        ? "edge-highlight-sage"
+        : accent === "amber"
+          ? "edge-highlight-amber"
+          : accent === "cornflower"
+            ? "edge-highlight-cornflower"
+            : "";
+  return (
+    <div className={cn("rounded-md surface px-4 py-3.5", edge)}>
+      <div className="label-caps text-muted-foreground">{label}</div>
+      <div className="mt-1.5 font-mono text-[24px] font-medium leading-none tracking-tight tnum">
+        {value}
+      </div>
+      {caption && (
+        <div className="mt-1 text-[11px] text-muted-foreground/85">{caption}</div>
+      )}
+    </div>
+  );
+}
+
+/* ── Velocity ── */
 
 function VelocityCard({ data }: { data: Bucket[] }) {
   const [range, setRange] = React.useState<"7" | "30" | "90">("30");
@@ -193,7 +261,7 @@ function VelocityCard({ data }: { data: Bucket[] }) {
   } satisfies ChartConfig;
 
   return (
-    <Card className="overflow-hidden">
+    <Card className="overflow-hidden rounded-md">
       <CardHeader className="flex flex-col gap-3 border-b divider-warm pb-5 sm:flex-row sm:items-center">
         <div className="flex-1">
           <Eyebrow>Volume</Eyebrow>
@@ -216,11 +284,11 @@ function VelocityCard({ data }: { data: Bucket[] }) {
           <AreaChart data={filtered} margin={{ left: 0, right: 8, top: 8, bottom: 0 }}>
             <defs>
               <linearGradient id="velocity-fill" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor={APRICOT} stopOpacity={0.4} />
+                <stop offset="0%" stopColor={APRICOT} stopOpacity={0.45} />
                 <stop offset="95%" stopColor={APRICOT} stopOpacity={0} />
               </linearGradient>
             </defs>
-            <CartesianGrid vertical={false} stroke="currentColor" strokeOpacity={0.05} />
+            <CartesianGrid vertical={false} stroke="currentColor" strokeOpacity={0.06} />
             <XAxis
               dataKey="date"
               tickLine={false}
@@ -236,7 +304,7 @@ function VelocityCard({ data }: { data: Bucket[] }) {
               className="font-mono text-[10px] uppercase tracking-wide text-muted-foreground"
             />
             <ChartTooltip
-              cursor={{ stroke: APRICOT_SOFT, strokeWidth: 1, strokeDasharray: "3 3" }}
+              cursor={{ stroke: APRICOT, strokeWidth: 1, strokeDasharray: "3 3" }}
               content={
                 <ChartTooltipContent
                   indicator="dot"
@@ -255,7 +323,7 @@ function VelocityCard({ data }: { data: Bucket[] }) {
               type="natural"
               fill="url(#velocity-fill)"
               stroke={APRICOT}
-              strokeWidth={1.75}
+              strokeWidth={2}
             />
           </AreaChart>
         </ChartContainer>
@@ -307,7 +375,7 @@ function FunnelCard({ metrics }: { metrics: Metrics }) {
   const max = Math.max(1, ...stages.map((s) => s.value));
 
   return (
-    <Card>
+    <Card className="rounded-md">
       <CardHeader className="flex flex-row items-baseline justify-between border-b divider-warm pb-5">
         <div>
           <Eyebrow>Conversion</Eyebrow>
@@ -340,10 +408,10 @@ function FunnelCard({ metrics }: { metrics: Metrics }) {
                   <span className="tabular-nums text-foreground">{stage.value}</span>
                 </span>
               </div>
-              <div className="mt-2 h-2 overflow-hidden rounded-full bg-foreground/[0.04]">
+              <div className="mt-2 h-2 overflow-hidden rounded-sm bg-foreground/[0.04]">
                 <div
                   className={cn(
-                    "h-full rounded-full transition-[width] duration-700 ease-out",
+                    "h-full rounded-sm transition-[width] duration-700 ease-out",
                     stage.accent ? "bg-apricot" : "bg-foreground/22",
                   )}
                   style={{ width: `${widthPct}%` }}
@@ -366,7 +434,7 @@ function HistogramCard({ data }: { data: HistoBucket[] }) {
   } satisfies ChartConfig;
 
   return (
-    <Card className="h-full">
+    <Card className="h-full rounded-md">
       <CardHeader className="border-b divider-warm pb-5">
         <Eyebrow>Quality</Eyebrow>
         <CardTitle className="mt-1 text-[15px]">Score distribution</CardTitle>
@@ -380,7 +448,7 @@ function HistogramCard({ data }: { data: HistoBucket[] }) {
         ) : (
           <ChartContainer config={chartConfig} className="aspect-auto h-[220px] w-full">
             <BarChart data={data} margin={{ top: 8, right: 8, bottom: 0, left: 0 }}>
-              <CartesianGrid vertical={false} stroke="currentColor" strokeOpacity={0.05} />
+              <CartesianGrid vertical={false} stroke="currentColor" strokeOpacity={0.06} />
               <XAxis
                 dataKey="label"
                 tickLine={false}
@@ -405,7 +473,7 @@ function HistogramCard({ data }: { data: HistoBucket[] }) {
                   />
                 }
               />
-              <Bar dataKey="count" radius={[8, 8, 0, 0]} maxBarSize={64}>
+              <Bar dataKey="count" radius={[4, 4, 0, 0]} maxBarSize={64}>
                 {data.map((d) => (
                   <Cell
                     key={d.label}
@@ -422,7 +490,7 @@ function HistogramCard({ data }: { data: HistoBucket[] }) {
   );
 }
 
-/* ── Source — horizontal stacked bar instead of pie ── */
+/* ── Source ── */
 
 function SourceCard({ data }: { data: { source: string; count: number }[] }) {
   const total = React.useMemo(
@@ -433,11 +501,11 @@ function SourceCard({ data }: { data: { source: string; count: number }[] }) {
   const items = data.map((d, i) => ({
     name: SOURCE_LABEL[d.source] ?? d.source,
     value: d.count,
-    color: i === 0 ? APRICOT : i === 1 ? SAGE : APRICOT_FAINT,
+    color: i === 0 ? APRICOT : i === 1 ? CORNFLOWER : SAGE,
   }));
 
   return (
-    <Card className="h-full">
+    <Card className="h-full rounded-md">
       <CardHeader className="border-b divider-warm pb-5">
         <Eyebrow>Source</Eyebrow>
         <CardTitle className="mt-1 text-[15px]">Where you applied</CardTitle>
@@ -448,19 +516,17 @@ function SourceCard({ data }: { data: { source: string; count: number }[] }) {
         ) : (
           <>
             <div className="mb-1 flex items-baseline justify-between">
-              <span className="font-display text-3xl tabular-nums tracking-tight">
+              <span className="font-display italic text-[34px] font-medium tnum tracking-tight">
                 {total}
               </span>
-              <span className="font-mono text-[10.5px] uppercase tracking-[0.16em] text-muted-foreground">
-                applied
-              </span>
+              <span className="label-caps text-muted-foreground">applied</span>
             </div>
 
-            <div className="mt-3 flex h-3 overflow-hidden rounded-full bg-foreground/[0.04]">
+            <div className="mt-3 flex h-3 overflow-hidden rounded-sm bg-foreground/[0.04]">
               {items.map((d) => (
                 <div
                   key={d.name}
-                  className="h-full transition-[width] duration-700 ease-out first:rounded-l-full last:rounded-r-full"
+                  className="h-full transition-[width] duration-700 ease-out"
                   style={{
                     width: `${(d.value / total) * 100}%`,
                     background: d.color,
@@ -478,7 +544,7 @@ function SourceCard({ data }: { data: { source: string; count: number }[] }) {
                 >
                   <span className="flex items-center gap-2.5">
                     <span
-                      className="size-2 rounded-full"
+                      className="size-2 rounded-sm"
                       style={{ background: d.color }}
                     />
                     <span className="text-foreground">{d.name}</span>
@@ -503,7 +569,7 @@ function SourceCard({ data }: { data: { source: string; count: number }[] }) {
 
 function CompaniesCard({ data }: { data: { company: string; count: number }[] }) {
   return (
-    <Card>
+    <Card className="rounded-md">
       <CardHeader className="border-b divider-warm pb-5">
         <Eyebrow>Companies</Eyebrow>
         <CardTitle className="mt-1 text-[15px]">Most applied</CardTitle>
@@ -538,16 +604,12 @@ function CompaniesCard({ data }: { data: { company: string; count: number }[] })
 /* ── Shared ── */
 
 function Eyebrow({ children }: { children: React.ReactNode }) {
-  return (
-    <div className="font-mono text-[10px] uppercase tracking-[0.22em] text-muted-foreground">
-      {children}
-    </div>
-  );
+  return <div className="label-caps text-muted-foreground">{children}</div>;
 }
 
 function EmptyHint({ children }: { children: React.ReactNode }) {
   return (
-    <div className="rounded-xl border border-dashed border-foreground/12 px-4 py-6 text-sm text-muted-foreground">
+    <div className="rounded-md border border-dashed border-foreground/12 px-4 py-6 text-sm text-muted-foreground">
       {children}
     </div>
   );

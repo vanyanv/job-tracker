@@ -7,38 +7,39 @@ import { WarmGlow } from "@/app/_components/warm-glow";
 export default function SignInPage() {
   return (
     <div className="relative flex min-h-[100dvh] flex-col items-center justify-center overflow-hidden bg-background px-4 py-10">
-      <WarmGlow position="top-right" size="xl" hue="apricot" />
-      <WarmGlow position="bottom-left" size="lg" hue="sage" className="opacity-60" />
+      <WarmGlow position="top-left" size="xl" hue="apricot" />
+      <WarmGlow position="bottom-right" size="lg" hue="cornflower" className="opacity-50" />
 
-      <div className="relative w-full max-w-[420px]">
+      <div className="relative w-full max-w-[440px]">
         <Link
           href="/"
           className="mx-auto mb-10 flex w-fit items-center gap-2.5"
         >
-          <span className="flex size-9 items-center justify-center rounded-2xl surface">
-            <Briefcase className="size-4 text-apricot" strokeWidth={1.75} />
+          <span className="flex size-9 items-center justify-center rounded-md bg-apricot/30">
+            <Briefcase className="size-4 text-foreground" strokeWidth={1.75} />
           </span>
-          <span className="font-display text-base font-medium tracking-tight">
+          <span className="font-display italic text-base font-medium tracking-tight">
             Job Tracker
           </span>
         </Link>
 
-        <div className="rounded-3xl surface px-7 py-9 md:px-9 md:py-11">
-          <div className="text-center">
-            <div className="font-mono text-[10px] uppercase tracking-[0.22em] text-muted-foreground">
-              Welcome
-            </div>
-            <h1 className="hearth-enter mt-3 font-display text-[34px] leading-[1.05] tracking-tight md:text-[40px]">
-              Find your next role,
-              <br />
-              <span className="italic font-light text-foreground/70">calmly.</span>
-            </h1>
-            <p className="mx-auto mt-4 max-w-[34ch] text-[14px] leading-relaxed text-muted-foreground">
-              Continue with your account to access your pipeline.
-            </p>
-          </div>
+        {/* Editorial cover headline — sits above the auth card */}
+        <div className="hearth-enter mb-8 text-center">
+          <div className="label-caps text-muted-foreground">Welcome</div>
+          <h1 className="mt-3 font-display text-[40px] leading-[0.98] tracking-tight md:text-[52px]">
+            <span className="block font-medium text-foreground">Find your next</span>
+            <span className="block italic font-normal text-foreground/75">
+              role, calmly.
+            </span>
+          </h1>
+        </div>
 
-          <div className="mt-9 flex flex-col gap-2.5">
+        <div className="hearth-enter bento-stage-2 rounded-md surface px-6 py-7 md:px-8 md:py-9">
+          <p className="text-center text-[13.5px] leading-relaxed text-muted-foreground">
+            Continue with your account to access your pipeline.
+          </p>
+
+          <div className="mt-7 flex flex-col gap-2.5">
             <form
               action={async () => {
                 "use server";
@@ -49,7 +50,7 @@ export default function SignInPage() {
                 type="submit"
                 variant="outline"
                 size="lg"
-                className="w-full justify-center gap-2.5"
+                className="w-full justify-center gap-2.5 rounded-md"
               >
                 <GoogleMark />
                 Continue with Google
@@ -65,7 +66,7 @@ export default function SignInPage() {
                 type="submit"
                 variant="outline"
                 size="lg"
-                className="w-full justify-center gap-2.5"
+                className="w-full justify-center gap-2.5 rounded-md"
               >
                 <GitHubMark />
                 Continue with GitHub
@@ -75,12 +76,10 @@ export default function SignInPage() {
 
           <div className="mt-7 flex items-center justify-center gap-2.5 text-[11px] text-muted-foreground">
             <span className="relative flex size-1.5">
-              <span className="absolute inline-flex size-full animate-ping rounded-full bg-sage/60" />
-              <span className="relative inline-flex size-1.5 rounded-full bg-sage" />
+              <span className="absolute inline-flex size-full animate-ping rounded-full bg-apricot/60" />
+              <span className="relative inline-flex size-1.5 rounded-full bg-apricot" />
             </span>
-            <span className="font-mono uppercase tracking-[0.16em]">
-              Scraper running · every 2h
-            </span>
+            <span className="label-caps">Scraper running · every 2h</span>
           </div>
         </div>
 

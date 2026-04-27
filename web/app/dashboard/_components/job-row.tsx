@@ -55,7 +55,7 @@ export function JobRow({
   return (
     <article
       className={cn(
-        "group/row relative flex items-start gap-4 rounded-2xl surface px-4 py-4 md:px-5 md:py-5",
+        "group/row relative flex items-start gap-4 rounded-md surface px-4 py-4 md:px-5 md:py-4.5",
         "lift-on-hover",
       )}
     >
@@ -98,7 +98,7 @@ export function JobRow({
         </div>
 
         {expanded && item.scoreReason && (
-          <p className="mt-3 flex items-start gap-2 rounded-xl surface-sunken px-3 py-2.5 text-[12.5px] leading-relaxed text-foreground/80">
+          <p className="mt-3 flex items-start gap-2 rounded-md surface-sunken px-3 py-2.5 text-[12.5px] leading-relaxed text-foreground/80">
             <CornerDownRight
               className="mt-0.5 size-3 shrink-0 text-muted-foreground/60"
               strokeWidth={1.75}
@@ -110,7 +110,7 @@ export function JobRow({
         )}
 
         {item.emailNote && (
-          <p className="mt-3 rounded-xl surface-sunken px-3 py-2 text-xs text-muted-foreground">
+          <p className="mt-3 rounded-md surface-sunken px-3 py-2 text-xs text-muted-foreground">
             {item.emailNote}
           </p>
         )}
@@ -148,7 +148,7 @@ export function JobRow({
           href={item.job.url}
           target="_blank"
           rel="noreferrer"
-          className="press-feedback inline-flex size-8 items-center justify-center rounded-full text-muted-foreground transition-colors duration-200 hover:bg-foreground/6 hover:text-foreground"
+          className="press-feedback inline-flex size-8 items-center justify-center rounded-md text-muted-foreground transition-colors duration-200 hover:bg-foreground/6 hover:text-foreground"
           title="Open posting"
         >
           <ExternalLink className="size-3.5" strokeWidth={1.75} />
@@ -185,12 +185,12 @@ function ActionButton({
       disabled={pending}
       title={label}
       className={cn(
-        "press-feedback inline-flex h-8 items-center gap-1.5 rounded-full px-3 text-[12px] font-medium transition-[background-color,color,filter] duration-200 ease-out disabled:pointer-events-none disabled:opacity-50",
+        "press-feedback inline-flex h-8 items-center gap-1.5 rounded-md px-3 text-[12px] font-medium transition-[background-color,color,filter] duration-200 ease-out disabled:pointer-events-none disabled:opacity-50",
         ghost
           ? "text-muted-foreground hover:bg-foreground/6 hover:text-foreground"
           : tone === "apricot"
-            ? "bg-apricot/12 text-apricot shadow-[inset_0_0_0_1px_oklch(0.78_0.13_55/22%)] hover:bg-apricot/18"
-            : "surface-sunken text-foreground hover:brightness-110",
+            ? "bg-apricot/25 text-foreground shadow-[inset_0_0_0_1px_oklch(0.886_0.052_53/45%)] hover:bg-apricot/40"
+            : "surface-sunken text-foreground hover:brightness-105",
       )}
     >
       {pending ? (

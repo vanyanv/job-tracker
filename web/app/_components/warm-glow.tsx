@@ -7,7 +7,7 @@ type Position =
   | "bottom-right"
   | "bottom-left";
 type Size = "sm" | "md" | "lg" | "xl";
-type Hue = "apricot" | "sage" | "amber";
+type Hue = "apricot" | "cornflower" | "sage" | "amber";
 
 const POSITION: Record<Position, string> = {
   "top-right": "top-[-30%] right-[-15%]",
@@ -26,10 +26,13 @@ const SIZE: Record<Size, string> = {
 
 const HUE: Record<Hue, string> = {
   apricot:
-    "bg-[radial-gradient(circle_at_center,oklch(0.68_0.22_260_/_28%)_0%,oklch(0.68_0.22_260_/_8%)_45%,transparent_72%)]",
-  sage: "bg-[radial-gradient(circle_at_center,oklch(0.71_0.14_157_/_22%)_0%,oklch(0.71_0.14_157_/_6%)_45%,transparent_72%)]",
+    "bg-[radial-gradient(circle_at_center,oklch(0.886_0.052_53_/_55%)_0%,oklch(0.886_0.052_53_/_18%)_45%,transparent_72%)]",
+  cornflower:
+    "bg-[radial-gradient(circle_at_center,oklch(0.667_0.063_246_/_28%)_0%,oklch(0.667_0.063_246_/_8%)_45%,transparent_72%)]",
+  sage:
+    "bg-[radial-gradient(circle_at_center,oklch(0.625_0.155_145_/_18%)_0%,oklch(0.625_0.155_145_/_6%)_45%,transparent_72%)]",
   amber:
-    "bg-[radial-gradient(circle_at_center,oklch(0.84_0.16_93_/_24%)_0%,oklch(0.84_0.16_93_/_6%)_45%,transparent_72%)]",
+    "bg-[radial-gradient(circle_at_center,oklch(0.685_0.158_56_/_22%)_0%,oklch(0.685_0.158_56_/_6%)_45%,transparent_72%)]",
 };
 
 export function WarmGlow({

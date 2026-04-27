@@ -1,23 +1,29 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import { Geist, Geist_Mono, Fraunces } from "next/font/google";
+import { Inter, JetBrains_Mono, Fraunces } from "next/font/google";
 import { cn } from "@/lib/utils";
 import { GrainOverlay } from "./_components/grain-overlay";
 
-const geistSans = Geist({
+const inter = Inter({
   subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
   variable: "--font-sans",
+  display: "swap",
 });
 
-const geistMono = Geist_Mono({
+const jetbrainsMono = JetBrains_Mono({
   subsets: ["latin"],
+  weight: ["400", "500"],
   variable: "--font-mono",
+  display: "swap",
 });
 
 const fraunces = Fraunces({
   subsets: ["latin"],
+  style: ["italic", "normal"],
   variable: "--font-display",
   axes: ["SOFT", "opsz"],
+  display: "swap",
 });
 
 export const metadata: Metadata = {
@@ -34,9 +40,9 @@ export default function RootLayout({
     <html
       lang="en"
       className={cn(
-        "dark font-sans",
-        geistSans.variable,
-        geistMono.variable,
+        "font-sans",
+        inter.variable,
+        jetbrainsMono.variable,
         fraunces.variable,
       )}
     >

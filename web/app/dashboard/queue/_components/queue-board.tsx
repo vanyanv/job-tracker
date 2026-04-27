@@ -8,14 +8,11 @@ import {
   CheckCircle2,
   XCircle,
   Loader2,
-  Keyboard,
   PlayCircle,
-  Layers,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { ScoreRing } from "@/app/_components/score-ring";
 import { Topbar } from "@/app/_components/topbar";
-import { WarmGlow } from "@/app/_components/warm-glow";
 import { cn } from "@/lib/utils";
 
 type QueueItem = {
@@ -170,224 +167,225 @@ export function QueueBoard({
     <div className="relative min-h-dvh bg-background text-foreground">
       <Topbar user={user} active="queue" />
 
-      <div className="relative mx-auto max-w-[1200px] px-4 pt-10 pb-16 md:px-8 md:pt-14 md:pb-24">
-        <WarmGlow position="top-right" size="lg" hue="apricot" />
+      <div className="relative mx-auto max-w-[820px] px-4 pt-8 pb-32 md:px-6 md:pt-12">
+        {/* Header */}
+        <header className="hearth-enter bento-stage-1 mb-7">
+          <Link
+            href="/dashboard"
+            className="press-feedback inline-flex w-fit items-center gap-1.5 rounded-sm py-1 text-[12px] font-medium text-muted-foreground transition-colors hover:text-foreground"
+          >
+            <ArrowLeft className="size-3.5" strokeWidth={2} />
+            Back to pipeline
+          </Link>
+          <div className="mt-5 label-caps text-muted-foreground">Apply session</div>
+          <h1 className="mt-2.5 font-display italic text-[44px] leading-[1.04] tracking-tight md:text-[52px]">
+            Queue.
+          </h1>
+          <p className="mt-3 max-w-[54ch] text-[14px] leading-relaxed text-muted-foreground">
+            Open in batches, apply via Simplify, and the extension marks each as
+            applied when you submit.
+          </p>
+        </header>
 
-        <div className="grid grid-cols-1 gap-10 lg:grid-cols-[1fr_280px] lg:gap-14">
-          <main className="min-w-0">
-            {/* Hero */}
-            <header className="mb-9">
-              <Link
-                href="/dashboard"
-                className="inline-flex w-fit items-center gap-1.5 text-[12px] font-medium text-muted-foreground transition-colors hover:text-foreground"
-              >
-                <ArrowLeft className="size-3.5" strokeWidth={2} />
-                Pipeline
-              </Link>
-              <div className="mt-5 font-mono text-[10px] uppercase tracking-[0.22em] text-muted-foreground">
-                Apply session
-              </div>
-              <h1 className="hearth-enter mt-3 font-display text-[44px] leading-[1.04] tracking-tight md:text-[56px]">
-                Queue.
-              </h1>
-              <p className="mt-4 max-w-[54ch] text-[14px] leading-relaxed text-muted-foreground">
-                Power through queued roles. Open in tabs, fill via Simplify, and
-                the extension will mark each as applied when you submit.
-              </p>
+        {/* Segmented progress */}
+        {totalForProgress > 0 && (
+          <SegmentedProgress
+            total={totalForProgress}
+            applied={sessionApplied}
+            cursor={cursor}
+            opened={opened.size}
+          />
+        )}
 
-              {/* Progress + stats */}
-              <div className="mt-7 grid grid-cols-3 gap-3 md:max-w-[480px]">
-                <SessionStat label="Remaining" value={remaining} />
-                <SessionStat label="Today" value={appliedToday + sessionApplied} tone="apricot" />
-                <SessionStat label="Opened" value={opened.size} />
-              </div>
+        {/* Action bar */}
+        <div className="hearth-enter bento-stage-2 mt-6 flex flex-wrap items-center gap-2.5">
+          <button
+            type="button"
+            onClick={openBatch}
+            disabled={remaining === 0}
+            className="press-feedback inline-flex h-9 items-center gap-2 rounded-md bg-apricot px-3.5 text-[13px] font-medium text-apricot-foreground shadow-[inset_0_1px_0_oklch(1_0_0/30%),0_4px_18px_-6px_oklch(0.886_0.052_53/55%)] disabled:pointer-events-none disabled:opacity-50"
+          >
+            <PlayCircle className="size-4" strokeWidth={1.75} />
+            Open next {batchSize}
+          </button>
 
-              {totalForProgress > 0 && (
-                <div className="mt-5 max-w-[480px]">
-                  <div className="h-1.5 overflow-hidden rounded-full bg-foreground/8">
-                    <div
-                      className="h-full bg-apricot transition-[width] duration-500 ease-out"
-                      style={{
-                        width: `${
-                          (sessionApplied / Math.max(1, totalForProgress)) * 100
-                        }%`,
-                      }}
-                    />
-                  </div>
-                  <p className="mt-2 font-mono text-[10.5px] uppercase tracking-[0.16em] text-muted-foreground">
-                    {sessionApplied} of {totalForProgress} this session
-                  </p>
-                </div>
-              )}
-            </header>
-
-            {/* Action bar */}
-            <div className="sticky top-16 z-20 -mx-4 mb-4 flex flex-wrap items-center gap-3 surface-elevated border-b divider-warm px-4 py-3 md:-mx-8 md:px-8">
+          <div className="inline-flex items-center gap-0.5 rounded-md surface-sunken p-1">
+            {[3, 5, 10].map((n) => (
               <button
+                key={n}
                 type="button"
-                onClick={openBatch}
-                disabled={remaining === 0}
-                className="press-feedback inline-flex h-9 items-center gap-2 rounded-full bg-apricot px-4 text-sm font-medium text-apricot-foreground shadow-[inset_0_1px_0_oklch(1_0_0/24%),0_4px_18px_-6px_oklch(0.78_0.13_55/45%)] disabled:pointer-events-none disabled:opacity-50"
+                onClick={() => setBatchSize(n)}
+                className={cn(
+                  "rounded-sm px-2.5 py-1 font-mono text-[11px] tabular-nums transition-colors duration-150",
+                  batchSize === n
+                    ? "bg-card text-foreground shadow-[inset_0_1px_0_oklch(1_0_0/10%)]"
+                    : "text-muted-foreground hover:text-foreground",
+                )}
               >
-                <PlayCircle className="size-4" strokeWidth={1.75} />
-                Open next {batchSize}
+                {n}
               </button>
+            ))}
+          </div>
 
-              <div className="inline-flex items-center gap-0.5 rounded-full surface-sunken p-1">
-                {[3, 5, 10].map((n) => (
-                  <button
-                    key={n}
-                    type="button"
-                    onClick={() => setBatchSize(n)}
+          <div className="ml-auto flex items-center gap-3 font-mono text-[11px] tabular-nums text-muted-foreground">
+            <span>
+              <span className="text-foreground">{appliedToday + sessionApplied}</span>
+              <span className="text-muted-foreground/60"> applied today</span>
+            </span>
+            <span className="hidden text-muted-foreground/40 sm:inline">·</span>
+            <span className="hidden sm:inline">
+              {remaining === 0 ? "—" : `${cursor + 1}/${remaining}`}
+            </span>
+          </div>
+        </div>
+
+        {/* List */}
+        {remaining === 0 ? (
+          <EmptyState />
+        ) : (
+          <ul className="mt-5 flex flex-col gap-1.5">
+            {items.map((item, idx) => {
+              const isCursor = idx === cursor;
+              const wasOpened = opened.has(item.id);
+              const isPending = pending[item.id];
+              return (
+                <li
+                  key={item.id}
+                  ref={(el) => {
+                    rowRefs.current[item.id] = el;
+                  }}
+                  onMouseEnter={() => setCursor(idx)}
+                  className={cn(
+                    "group/r relative flex items-start gap-4 rounded-md px-4 py-3.5 transition-[background-color,box-shadow] duration-200 ease-out md:px-5",
+                    isCursor
+                      ? "surface shadow-[inset_2px_0_0_var(--apricot),inset_0_0_0_1px_oklch(0.886_0.052_53/22%),0_2px_24px_-8px_oklch(0.886_0.052_53/30%)]"
+                      : "bg-card/30 hover:bg-card/60",
+                  )}
+                >
+                  <ScoreRing score={item.score ?? 0} size="md" className="mt-0.5" />
+
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-baseline gap-x-2.5 gap-y-1">
+                      <a
+                        href={item.job.url}
+                        target="_blank"
+                        rel="noreferrer"
+                        onClick={() => {
+                          setOpened((prev) => {
+                            const next = new Set(prev);
+                            next.add(item.id);
+                            return next;
+                          });
+                        }}
+                        className={cn(
+                          "font-medium leading-snug tracking-tight transition-colors duration-200",
+                          isCursor
+                            ? "font-display italic text-[17px] text-foreground"
+                            : "text-[15px] text-foreground hover:text-foreground/75",
+                        )}
+                      >
+                        {item.job.title}
+                      </a>
+                      <span className="text-muted-foreground/40">·</span>
+                      <span className="text-[13px] text-muted-foreground">
+                        {item.job.company}
+                      </span>
+                      {wasOpened && <Badge tone="active">Opened</Badge>}
+                    </div>
+                    <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 font-mono text-[10.5px] uppercase tracking-[0.10em] text-muted-foreground/85">
+                      <span>{item.job.location || "—"}</span>
+                      <Dot />
+                      <span>{relTime(item.job.postedAt)}</span>
+                      <Dot />
+                      <span>{SOURCE_LABEL[item.job.source] ?? item.job.source}</span>
+                    </div>
+                    {isCursor && item.scoreReason && (
+                      <p className="mt-2.5 max-w-[64ch] text-[12.5px] leading-relaxed text-muted-foreground/85">
+                        {item.scoreReason}
+                      </p>
+                    )}
+                  </div>
+
+                  <div
                     className={cn(
-                      "rounded-full px-3 py-1 font-mono text-[11px] tabular-nums transition-colors duration-150",
-                      batchSize === n
-                        ? "bg-card text-foreground shadow-[inset_0_1px_0_oklch(1_0_0/8%)]"
-                        : "text-muted-foreground hover:text-foreground",
+                      "ml-auto flex shrink-0 items-center gap-1 transition-opacity duration-200",
+                      isCursor ? "opacity-100" : "opacity-0 group-hover/r:opacity-100",
                     )}
                   >
-                    {n}
-                  </button>
-                ))}
-              </div>
-
-              <ShortcutHint />
-
-              <div className="ml-auto font-mono text-[11px] tabular-nums text-muted-foreground">
-                {remaining === 0 ? "—" : `${cursor + 1}/${remaining}`}
-              </div>
-            </div>
-
-            {/* List */}
-            {remaining === 0 ? (
-              <EmptyState />
-            ) : (
-              <ul className="flex flex-col gap-2">
-                {items.map((item, idx) => {
-                  const isCursor = idx === cursor;
-                  const wasOpened = opened.has(item.id);
-                  const isPending = pending[item.id];
-                  return (
-                    <li
-                      key={item.id}
-                      ref={(el) => {
-                        rowRefs.current[item.id] = el;
-                      }}
-                      onMouseEnter={() => setCursor(idx)}
-                      className={cn(
-                        "group/r relative flex items-start gap-4 rounded-2xl px-4 py-4 transition-[background-color,box-shadow] duration-200 ease-out md:px-5",
-                        isCursor
-                          ? "surface shadow-[inset_0_0_0_1px_oklch(0.78_0.13_55/22%),0_2px_24px_-8px_oklch(0.78_0.13_55/30%)]"
-                          : "bg-foreground/[0.012] hover:bg-foreground/[0.025]",
-                      )}
-                    >
-                      <ScoreRing score={item.score ?? 0} size="md" className="mt-0.5" />
-
-                      <div className="min-w-0 flex-1">
-                        <div className="flex flex-wrap items-baseline gap-x-2.5 gap-y-1">
-                          <a
-                            href={item.job.url}
-                            target="_blank"
-                            rel="noreferrer"
-                            onClick={() => {
-                              setOpened((prev) => {
-                                const next = new Set(prev);
-                                next.add(item.id);
-                                return next;
-                              });
-                            }}
-                            className="font-display text-[16px] font-medium leading-snug tracking-tight text-foreground transition-colors duration-200 hover:text-foreground/75"
-                          >
-                            {item.job.title}
-                          </a>
-                          <span className="text-muted-foreground/40">·</span>
-                          <span className="text-[13.5px] text-muted-foreground">
-                            {item.job.company}
-                          </span>
-                          {wasOpened && <Badge tone="active">Opened</Badge>}
-                        </div>
-                        <div className="mt-1.5 flex flex-wrap items-center gap-x-3.5 gap-y-1 font-mono text-[10.5px] uppercase tracking-[0.04em] text-muted-foreground/85">
-                          <span>{item.job.location || "—"}</span>
-                          <Dot />
-                          <span>{relTime(item.job.postedAt)}</span>
-                          <Dot />
-                          <span>{SOURCE_LABEL[item.job.source] ?? item.job.source}</span>
-                        </div>
-                        {item.scoreReason && (
-                          <p className="mt-2.5 max-w-[64ch] text-[12.5px] leading-relaxed text-muted-foreground/85">
-                            {item.scoreReason}
-                          </p>
-                        )}
-                      </div>
-
-                      <div className="ml-auto flex shrink-0 items-center gap-1">
-                        <RowAction
-                          onClick={() => openItem(item)}
-                          icon={ExternalLink}
-                          label="Open"
-                          shortcut="O"
-                        />
-                        <RowAction
-                          onClick={() => setStatus(item.id, "applied")}
-                          icon={CheckCircle2}
-                          label="Applied"
-                          shortcut="A"
-                          tone="apricot"
-                          pending={isPending === "applied"}
-                        />
-                        <RowAction
-                          onClick={() => setStatus(item.id, "skipped")}
-                          icon={XCircle}
-                          label="Skip"
-                          shortcut="S"
-                          ghost
-                          pending={isPending === "skipped"}
-                        />
-                      </div>
-                    </li>
-                  );
-                })}
-              </ul>
-            )}
-          </main>
-
-          {/* Right rail */}
-          <aside className="lg:sticky lg:top-24 lg:self-start">
-            <div className="rounded-2xl surface px-5 py-5">
-              <div className="font-mono text-[10px] uppercase tracking-[0.22em] text-muted-foreground">
-                Flow
-              </div>
-              <ol className="mt-4 space-y-3.5 text-sm leading-relaxed">
-                <Step n={1} label="Open in batch" detail="Stagger up to 10 tabs at once." />
-                <Step n={2} label="Apply via Simplify" detail="Auto-fill in each ATS form." />
-                <Step
-                  n={3}
-                  label="Extension marks applied"
-                  detail="Detects confirmation page; you'll see a Chrome notification."
-                />
-                <Step
-                  n={4}
-                  label="Item disappears"
-                  detail="Refresh this page to pick up extension-marked rows."
-                />
-              </ol>
-            </div>
-
-            <div className="mt-5 rounded-2xl border border-dashed border-foreground/12 px-5 py-4">
-              <div className="flex items-center gap-2.5">
-                <span className="flex size-9 items-center justify-center rounded-xl surface-sunken">
-                  <Layers className="size-4 text-foreground/70" strokeWidth={1.75} />
-                </span>
-                <div>
-                  <div className="text-[13px] font-medium leading-none">Session</div>
-                  <div className="mt-1.5 font-mono text-[11px] uppercase tracking-wide text-muted-foreground">
-                    {sessionApplied} applied · {opened.size} opened
+                    <RowAction
+                      onClick={() => openItem(item)}
+                      icon={ExternalLink}
+                      label="Open"
+                      shortcut="O"
+                    />
+                    <RowAction
+                      onClick={() => setStatus(item.id, "applied")}
+                      icon={CheckCircle2}
+                      label="Applied"
+                      shortcut="A"
+                      tone="apricot"
+                      pending={isPending === "applied"}
+                    />
+                    <RowAction
+                      onClick={() => setStatus(item.id, "skipped")}
+                      icon={XCircle}
+                      label="Skip"
+                      shortcut="S"
+                      ghost
+                      pending={isPending === "skipped"}
+                    />
                   </div>
-                </div>
-              </div>
-            </div>
-          </aside>
-        </div>
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </div>
+
+      {/* Floating keyboard dock */}
+      {remaining > 0 && <KeyboardDock />}
+    </div>
+  );
+}
+
+function SegmentedProgress({
+  total,
+  applied,
+  cursor,
+  opened,
+}: {
+  total: number;
+  applied: number;
+  cursor: number;
+  opened: number;
+}) {
+  return (
+    <div className="hearth-enter bento-stage-1">
+      <div className="flex h-1.5 gap-px overflow-hidden rounded-sm">
+        {Array.from({ length: total }).map((_, i) => {
+          const isApplied = i < applied;
+          const isCursor = i === applied + cursor;
+          return (
+            <div
+              key={i}
+              className={cn(
+                "h-full flex-1 transition-colors duration-300",
+                isApplied
+                  ? "bg-apricot"
+                  : isCursor
+                    ? "bg-apricot/40"
+                    : "bg-foreground/8",
+              )}
+            />
+          );
+        })}
+      </div>
+      <div className="mt-2 flex items-center justify-between font-mono text-[10.5px] uppercase tracking-[0.14em] text-muted-foreground">
+        <span>
+          <span className="text-foreground">{applied}</span>
+          <span className="text-muted-foreground/60"> / {total} session</span>
+        </span>
+        <span>{opened} opened</span>
       </div>
     </div>
   );
@@ -396,32 +394,6 @@ export function QueueBoard({
 function Dot() {
   return (
     <span className="size-0.5 rounded-full bg-muted-foreground/30" aria-hidden />
-  );
-}
-
-function SessionStat({
-  label,
-  value,
-  tone,
-}: {
-  label: string;
-  value: number;
-  tone?: "apricot";
-}) {
-  return (
-    <div className="rounded-2xl surface px-3.5 py-3">
-      <div className="font-mono text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
-        {label}
-      </div>
-      <div
-        className={cn(
-          "mt-1 font-display text-2xl leading-none tracking-tight tabular-nums",
-          tone === "apricot" ? "text-apricot" : "text-foreground",
-        )}
-      >
-        {value}
-      </div>
-    </div>
   );
 }
 
@@ -447,13 +419,14 @@ function RowAction({
       type="button"
       onClick={onClick}
       disabled={pending}
+      title={`${label} (${shortcut})`}
       className={cn(
-        "press-feedback inline-flex h-8 items-center gap-1.5 rounded-full px-3 text-[12px] font-medium transition-[background-color,color] duration-200 ease-out disabled:pointer-events-none disabled:opacity-50",
+        "press-feedback inline-flex h-8 items-center gap-1.5 rounded-md px-2.5 text-[12px] font-medium transition-[background-color,color] duration-200 ease-out disabled:pointer-events-none disabled:opacity-50",
         ghost
           ? "text-muted-foreground hover:bg-foreground/6 hover:text-foreground"
           : tone === "apricot"
-            ? "bg-apricot/12 text-apricot shadow-[inset_0_0_0_1px_oklch(0.78_0.13_55/22%)] hover:bg-apricot/18"
-            : "surface-sunken text-foreground hover:brightness-110",
+            ? "bg-apricot/30 text-foreground shadow-[inset_0_0_0_1px_oklch(0.886_0.052_53/45%)] hover:bg-apricot/45"
+            : "surface-sunken text-foreground hover:brightness-105",
       )}
     >
       {pending ? (
@@ -461,79 +434,54 @@ function RowAction({
       ) : (
         <Icon className="size-3.5" strokeWidth={1.75} />
       )}
-      <span className="hidden sm:inline">{label}</span>
-      <kbd className="ml-1 hidden rounded-md bg-foreground/8 px-1 py-px font-mono text-[9px] uppercase tracking-wider text-muted-foreground sm:inline">
-        {shortcut}
-      </kbd>
+      <span className="hidden md:inline">{label}</span>
     </button>
   );
 }
 
-function ShortcutHint() {
+function KeyboardDock() {
   return (
-    <div className="hidden items-center gap-2 rounded-full surface-sunken px-3 py-1.5 text-[11px] text-muted-foreground md:flex">
-      <Keyboard className="size-3" strokeWidth={1.75} />
-      <span className="flex items-center gap-1.5">
-        <Key>J</Key>
-        <Key>K</Key>
-        navigate
-        <span className="mx-1 text-muted-foreground/30">·</span>
-        <Key>O</Key>
-        open
-        <span className="mx-1 text-muted-foreground/30">·</span>
-        <Key>A</Key>
-        applied
-        <span className="mx-1 text-muted-foreground/30">·</span>
-        <Key>S</Key>
-        skip
-      </span>
+    <div className="fixed bottom-6 left-1/2 z-30 hidden -translate-x-1/2 md:block">
+      <div className="flex items-center gap-1.5 rounded-md surface px-3 py-2 text-[11px] text-muted-foreground shadow-[0_12px_32px_-12px_oklch(0_0_0/30%)]">
+        <KeyPair k="J" label="↓" />
+        <KeyPair k="K" label="↑" />
+        <span className="mx-1 text-muted-foreground/40">·</span>
+        <KeyPair k="O" label="open" />
+        <KeyPair k="A" label="applied" />
+        <KeyPair k="S" label="skip" />
+        <KeyPair k="U" label="undo" />
+      </div>
     </div>
   );
 }
 
-function Key({ children }: { children: React.ReactNode }) {
+function KeyPair({ k, label }: { k: string; label: string }) {
   return (
-    <kbd className="rounded-md bg-card px-1.5 py-px font-mono text-[10px] uppercase tracking-wider text-foreground shadow-[inset_0_1px_0_oklch(1_0_0/8%)]">
-      {children}
-    </kbd>
-  );
-}
-
-function Step({ n, label, detail }: { n: number; label: string; detail: string }) {
-  return (
-    <li className="flex items-start gap-3">
-      <span className="mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-lg bg-apricot/10 font-mono text-[10px] font-medium tabular-nums text-apricot">
-        {n}
-      </span>
-      <div className="min-w-0">
-        <div className="text-[13px] font-medium leading-tight">{label}</div>
-        <p className="mt-1 text-[11.5px] leading-relaxed text-muted-foreground">
-          {detail}
-        </p>
-      </div>
-    </li>
+    <span className="inline-flex items-center gap-1.5">
+      <kbd className="inline-flex h-5 min-w-5 items-center justify-center rounded-sm bg-card px-1.5 font-mono text-[10px] font-medium uppercase text-foreground shadow-[inset_0_1px_0_oklch(1_0_0/10%),0_1px_2px_oklch(0_0_0/10%)]">
+        {k}
+      </kbd>
+      <span className="text-[11px] text-muted-foreground">{label}</span>
+    </span>
   );
 }
 
 function EmptyState() {
   return (
-    <div className="mt-6 flex flex-col items-center justify-center gap-4 rounded-3xl border border-dashed border-foreground/12 bg-foreground/[0.012] px-6 py-20 text-center">
-      <span className="flex size-12 items-center justify-center rounded-2xl surface-sunken">
-        <PlayCircle
-          className="size-5 text-muted-foreground"
-          strokeWidth={1.5}
-        />
+    <div className="hearth-enter bento-stage-2 mt-10 flex flex-col items-center justify-center gap-5 rounded-md border border-dashed border-foreground/12 px-6 py-20 text-center">
+      <span className="flex size-12 items-center justify-center rounded-md bg-sage/10">
+        <CheckCircle2 className="size-5 text-sage" strokeWidth={1.5} />
       </span>
       <div>
-        <div className="font-display text-xl leading-snug">Queue is empty</div>
+        <div className="font-display italic text-2xl leading-snug">Inbox zero.</div>
         <p className="mx-auto mt-2 max-w-[44ch] text-[13.5px] leading-relaxed text-muted-foreground">
-          Add jobs from the pipeline. High-score roles appear here ready for a
-          focused apply session.
+          Your queue is clear. Add more roles from the pipeline to start a new
+          apply session.
         </p>
       </div>
       <Link
         href="/dashboard"
-        className="press-feedback mt-2 inline-flex h-9 items-center gap-1.5 rounded-full surface-sunken px-4 text-[13px]"
+        className="press-feedback mt-1 inline-flex h-9 items-center gap-1.5 rounded-md surface-sunken px-3.5 text-[13px]"
       >
         Back to pipeline
       </Link>

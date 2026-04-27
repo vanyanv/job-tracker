@@ -7,13 +7,11 @@ import {
   FileText,
   Sparkles,
   CheckCircle2,
-  CircleDashed,
   ArrowRight,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { JobFeed, type FeedItem } from "./job-feed";
 import { Topbar } from "@/app/_components/topbar";
-import { WarmGlow } from "@/app/_components/warm-glow";
 import { StatTile } from "@/app/_components/stat-tile";
 
 export type DashboardUser = {
@@ -56,9 +54,13 @@ export function DashboardShell({
 
   const setupComplete =
     user.aiConfigured && user.hasResume && user.gmailConnected;
+  const setupDone = [user.aiConfigured, user.hasResume, user.gmailConnected].filter(
+    Boolean,
+  ).length;
 
   const activeValues = React.useMemo(
-    () => STATUS_FILTERS.find((f) => f.id === activeFilter)?.values ?? ["new", "queued"],
+    () =>
+      STATUS_FILTERS.find((f) => f.id === activeFilter)?.values ?? ["new", "queued"],
     [activeFilter],
   );
 
@@ -66,45 +68,77 @@ export function DashboardShell({
     <div className="relative min-h-[100dvh] bg-background text-foreground">
       <Topbar user={user} active="pipeline" />
 
-      <div className="relative mx-auto max-w-[1400px] px-4 pt-10 pb-16 md:px-8 md:pt-14 md:pb-24">
-        {/* Hero block */}
-        <section className="relative mb-12 md:mb-16">
-          <WarmGlow position="top-right" size="xl" hue="apricot" />
-          <WarmGlow position="top-left" size="md" hue="sage" className="opacity-50" />
+      <div className="relative mx-auto max-w-[1400px] px-4 pt-8 pb-16 md:px-8 md:pt-10 md:pb-24">
+        {/* Hero — greeter + KPIs in 2-up Bento */}
+        <section className="grid grid-cols-1 gap-4 md:grid-cols-12 md:gap-5">
+          {/* Greeter block (8 cols) */}
+          <div className="hearth-enter bento-stage-1 md:col-span-8">
+            <div className="label-caps text-muted-foreground">{dayLabel()}</div>
+            <h1 className="mt-2.5 max-w-[20ch] font-display text-[40px] leading-[1.04] tracking-tight md:text-[56px]">
+              <span className="text-foreground/95 not-italic font-medium">
+                {greeting(user.name)}
+              </span>
+              <br />
+              <span className="italic font-normal text-foreground/70">
+                {heroSubject(newCount, total)}
+              </span>
+            </h1>
+            <p className="mt-4 max-w-[52ch] text-[14.5px] leading-relaxed text-muted-foreground">
+              {total === 0
+                ? "No jobs ingested yet. The scraper runs every two hours — once your resume and AI provider are configured, fresh roles land here."
+                : `${total} role${total === 1 ? "" : "s"} in your pipeline. ${newCount} arrived recently — scored, surfaced, and waiting on you.`}
+            </p>
 
-          <div className="font-mono text-[10px] uppercase tracking-[0.22em] text-muted-foreground">
-            {dayLabel()}
+            <div className="mt-6 flex flex-wrap items-center gap-3">
+              {queuedCount > 0 ? (
+                <Link
+                  href="/dashboard/queue"
+                  className="press-feedback inline-flex h-10 items-center justify-center gap-2.5 rounded-md bg-apricot px-4 text-[13.5px] font-medium text-apricot-foreground shadow-[inset_0_1px_0_oklch(1_0_0/35%),0_8px_24px_-10px_oklch(0.886_0.052_53/65%)] transition-[transform,filter] duration-200 ease-out hover:brightness-105"
+                >
+                  Start apply session
+                  <span className="font-mono text-[11px] tabular-nums opacity-75">
+                    {queuedCount}
+                  </span>
+                  <ArrowRight className="size-3.5" strokeWidth={2} />
+                </Link>
+              ) : (
+                <div className="text-sm text-muted-foreground">
+                  Queue something from the feed below to start an apply session.
+                </div>
+              )}
+
+              {!setupComplete && (
+                <Link
+                  href="/settings"
+                  className="press-feedback inline-flex h-10 items-center gap-2 rounded-md surface-sunken px-3.5 text-[12.5px] text-muted-foreground transition-colors duration-200 ease-out hover:text-foreground"
+                >
+                  <span className="size-1.5 rounded-full bg-amber-warm" />
+                  <span>Complete setup</span>
+                  <span className="font-mono tnum text-[11px] text-muted-foreground/60">
+                    {setupDone}/3
+                  </span>
+                </Link>
+              )}
+            </div>
           </div>
-          <h1 className="hearth-enter mt-3 max-w-[18ch] font-display text-[44px] leading-[1.04] tracking-tight md:text-[64px]">
-            <span className="text-foreground/95">{greeting(user.name)}</span>
-            <br />
-            <span className="italic font-light text-foreground/65">
-              {heroSubject(newCount, total)}
-            </span>
-          </h1>
-          <p className="mt-5 max-w-[52ch] text-[15px] leading-relaxed text-muted-foreground">
-            {total === 0
-              ? "No jobs ingested yet. The scraper runs every two hours — once your resume and AI provider are configured, fresh roles land here."
-              : `${total} role${total === 1 ? "" : "s"} in your pipeline. ${newCount} arrived recently — scored, surfaced, and waiting on you.`}
-          </p>
 
-          {/* Stat tiles */}
-          <div className="mt-9 grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-4">
+          {/* KPI block (4 cols) — 2x2 grid */}
+          <div className="grid grid-cols-2 gap-3 md:col-span-4">
             <StatTile
               label="Inbox"
               value={newCount}
               tone={newCount > 0 ? "apricot" : "default"}
               caption={newCount > 0 ? "Fresh & unscored" : "All caught up"}
               display
-              delay={0}
+              delay={60}
             />
             <StatTile
               label="Queued"
               value={queuedCount}
-              tone="default"
+              tone={queuedCount > 0 ? "cornflower" : "default"}
               caption={queuedCount > 0 ? "Ready to apply" : "Empty"}
               display
-              delay={45}
+              delay={120}
             />
             <StatTile
               label="Applied"
@@ -112,7 +146,7 @@ export function DashboardShell({
               tone={appliedCount > 0 ? "sage" : "default"}
               caption="All time"
               display
-              delay={90}
+              delay={180}
             />
             <StatTile
               label="Interview"
@@ -120,121 +154,36 @@ export function DashboardShell({
               tone={interviewCount > 0 ? "amber" : "default"}
               caption={interviewCount > 0 ? "Active conversations" : "Keep applying"}
               display
-              delay={135}
+              delay={240}
             />
-          </div>
-
-          {/* CTA + setup */}
-          <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:items-center">
-            {queuedCount > 0 ? (
-              <Link
-                href="/dashboard/queue"
-                className="press-feedback inline-flex h-11 items-center justify-center gap-2.5 rounded-full bg-apricot px-5 text-sm font-medium text-apricot-foreground shadow-[inset_0_1px_0_oklch(1_0_0/28%),0_8px_28px_-10px_oklch(0.78_0.13_55/55%)] transition-[transform,filter] duration-200 ease-out hover:brightness-110"
-              >
-                Start apply session
-                <span className="font-mono text-[11px] tabular-nums opacity-80">
-                  {queuedCount}
-                </span>
-                <ArrowRight className="size-3.5" strokeWidth={2} />
-              </Link>
-            ) : (
-              <div className="text-sm text-muted-foreground">
-                Queue something from your feed to start an apply session.
-              </div>
-            )}
-
-            {!setupComplete && (
-              <SetupHint user={user} />
-            )}
           </div>
         </section>
 
-        {/* Filter rail + feed */}
-        <div className="grid grid-cols-1 gap-10 lg:grid-cols-[230px_1fr] lg:gap-14">
-          <aside className="lg:sticky lg:top-24 lg:self-start lg:max-h-[calc(100dvh-7rem)] lg:overflow-y-auto">
-            <div className="font-mono text-[10px] uppercase tracking-[0.22em] text-muted-foreground">
-              Filter
-            </div>
-            <nav className="mt-4 flex flex-col gap-0.5">
+        {/* Filter chip rail */}
+        <section className="hearth-enter bento-stage-3 mt-10 md:mt-12">
+          <div className="-mx-4 overflow-x-auto px-4 md:mx-0 md:px-0">
+            <div className="flex min-w-max items-center gap-1.5">
               {STATUS_FILTERS.map((f) => {
                 const c = f.values.reduce((sum, v) => sum + (counts[v] ?? 0), 0);
                 const active = activeFilter === f.id;
                 return (
-                  <button
+                  <FilterChip
                     key={f.id}
+                    active={active}
                     onClick={() => setActiveFilter(f.id)}
-                    className={cn(
-                      "press-feedback group/f flex items-center justify-between rounded-xl px-3 py-2 text-left",
-                      active
-                        ? "bg-foreground/[0.045] text-foreground shadow-[inset_0_1px_0_oklch(1_0_0/4%)]"
-                        : "text-muted-foreground hover:bg-foreground/[0.03] hover:text-foreground",
-                    )}
+                    count={c}
                   >
-                    <span className="flex items-center gap-2.5">
-                      <span
-                        className={cn(
-                          "size-1.5 rounded-full transition-colors duration-150",
-                          active
-                            ? "bg-apricot"
-                            : "bg-foreground/25 group-hover/f:bg-foreground/45",
-                        )}
-                      />
-                      <span className="text-[13px] leading-none">{f.label}</span>
-                    </span>
-                    <span
-                      className={cn(
-                        "font-mono text-[11px] tabular-nums",
-                        active ? "text-foreground" : "text-muted-foreground/60",
-                      )}
-                    >
-                      {c}
-                    </span>
-                  </button>
+                    {f.label}
+                  </FilterChip>
                 );
               })}
-            </nav>
-
-            <div className="mt-10 border-t divider-warm pt-5">
-              <div className="flex items-center justify-between">
-                <div className="font-mono text-[10px] uppercase tracking-[0.22em] text-muted-foreground">
-                  Setup
-                </div>
-                <div className="font-mono text-[10px] tabular-nums text-muted-foreground/60">
-                  {[user.aiConfigured, user.hasResume, user.gmailConnected].filter(Boolean).length} / 3
-                </div>
-              </div>
-              <div className="mt-2.5 flex gap-1">
-                {[user.aiConfigured, user.hasResume, user.gmailConnected].map((ok, i) => (
-                  <div key={i} className={cn(
-                    "h-0.75 flex-1 rounded-full transition-colors duration-300",
-                    ok ? "bg-sage" : "bg-foreground/12",
-                  )} />
-                ))}
-              </div>
-              <ul className="mt-4 space-y-2.5">
-                <SetupRow
-                  ok={user.aiConfigured}
-                  icon={Sparkles}
-                  label="AI provider"
-                  href="/settings"
-                />
-                <SetupRow
-                  ok={user.hasResume}
-                  icon={FileText}
-                  label="Resume parsed"
-                  href="/settings"
-                />
-                <SetupRow
-                  ok={user.gmailConnected}
-                  icon={Mail}
-                  label="Gmail sync"
-                  href="/settings?gmail=1"
-                />
-              </ul>
             </div>
-          </aside>
+          </div>
+        </section>
 
-          <main className="min-w-0">
+        {/* Feed + right rail */}
+        <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-12 lg:gap-8">
+          <main className="min-w-0 lg:col-span-8">
             <JobFeed
               key={activeFilter}
               statuses={activeValues}
@@ -242,35 +191,135 @@ export function DashboardShell({
               onCountsChange={setCounts}
             />
           </main>
+
+          <aside className="flex flex-col gap-4 lg:col-span-4 lg:sticky lg:top-20 lg:self-start">
+            <SetupBlock user={user} done={setupDone} />
+            <QueuePreviewBlock queuedCount={queuedCount} />
+          </aside>
         </div>
       </div>
     </div>
   );
 }
 
+function FilterChip({
+  active,
+  onClick,
+  count,
+  children,
+}: {
+  active: boolean;
+  onClick: () => void;
+  count: number;
+  children: React.ReactNode;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={cn(
+        "press-feedback inline-flex shrink-0 items-center gap-2 rounded-md border px-3 py-1.5 text-[12.5px] font-medium transition-colors duration-150",
+        active
+          ? "border-apricot/40 bg-apricot/15 text-foreground shadow-[inset_0_1px_0_oklch(1_0_0/12%)]"
+          : "border-border bg-card/30 text-muted-foreground hover:border-foreground/15 hover:bg-card/60 hover:text-foreground",
+      )}
+    >
+      <span>{children}</span>
+      <span
+        className={cn(
+          "font-mono text-[10.5px] tabular-nums",
+          active ? "text-foreground/70" : "text-muted-foreground/60",
+        )}
+      >
+        {count}
+      </span>
+    </button>
+  );
+}
+
+function SetupBlock({
+  user,
+  done,
+}: {
+  user: DashboardUser;
+  done: number;
+}) {
+  return (
+    <div className="hearth-enter bento-stage-4 rounded-md surface p-5">
+      <div className="flex items-center justify-between">
+        <span className="label-caps text-muted-foreground">Setup</span>
+        <span className="font-mono text-[10.5px] tabular-nums text-muted-foreground/70">
+          {done} / 3
+        </span>
+      </div>
+      <div className="mt-3 flex gap-1">
+        {[user.aiConfigured, user.hasResume, user.gmailConnected].map((ok, i) => (
+          <div
+            key={i}
+            className={cn(
+              "h-1 flex-1 rounded-sm transition-colors duration-300",
+              ok ? "bg-sage" : "bg-foreground/12",
+            )}
+          />
+        ))}
+      </div>
+      <ul className="mt-4 space-y-2.5">
+        <SetupRow ok={user.aiConfigured} icon={Sparkles} label="AI provider" href="/settings" />
+        <SetupRow ok={user.hasResume} icon={FileText} label="Resume parsed" href="/settings" />
+        <SetupRow ok={user.gmailConnected} icon={Mail} label="Gmail sync" href="/settings?gmail=1" />
+      </ul>
+    </div>
+  );
+}
+
+function QueuePreviewBlock({ queuedCount }: { queuedCount: number }) {
+  return (
+    <div className="hearth-enter bento-stage-5 rounded-md surface p-5">
+      <div className="flex items-center justify-between">
+        <span className="label-caps text-muted-foreground">Apply Session</span>
+        <span className="font-mono text-[10.5px] tabular-nums text-muted-foreground/70">
+          {queuedCount} ready
+        </span>
+      </div>
+      <p className="mt-3 text-[13px] leading-relaxed text-muted-foreground">
+        {queuedCount === 0
+          ? "Queue jobs you want to apply to. Then run a focused, keyboard-driven session — open tabs in batches, mark as applied, move on."
+          : `${queuedCount} role${queuedCount === 1 ? "" : "s"} queued. Open them in batches and apply with one keystroke.`}
+      </p>
+      {queuedCount > 0 && (
+        <Link
+          href="/dashboard/queue"
+          className="press-feedback mt-4 inline-flex h-9 items-center gap-2 rounded-md bg-apricot px-3.5 text-[12.5px] font-medium text-apricot-foreground hover:brightness-105"
+        >
+          Start session
+          <ArrowRight className="size-3.5" strokeWidth={2} />
+        </Link>
+      )}
+    </div>
+  );
+}
+
 function dayLabel(): string {
-  return new Date()
-    .toLocaleDateString("en-US", {
-      weekday: "long",
-      month: "long",
-      day: "numeric",
-    })
-    .toLowerCase();
+  return new Date().toLocaleDateString("en-US", {
+    weekday: "long",
+    month: "long",
+    day: "numeric",
+  });
 }
 
 function greeting(name: string | null): string {
   const first = (name ?? "").split(" ")[0] ?? "";
   const hour = new Date().getHours();
   const tod =
-    hour < 5 ? "Late night" : hour < 12 ? "Morning" : hour < 18 ? "Afternoon" : "Evening";
+    hour < 5 ? "Late night" : hour < 12 ? "Good morning" : hour < 18 ? "Afternoon" : "Evening";
   return first ? `${tod}, ${first}.` : `${tod}.`;
 }
 
 function heroSubject(newCount: number, total: number): string {
   if (total === 0) return "Nothing yet — scrape pending.";
   if (newCount === 0) return "Pipeline's quiet for now.";
-  if (newCount === 1) return "One fresh role today.";
-  return `${spellOut(newCount)} fresh today.`;
+  if (newCount === 1) return "One fresh role today — go.";
+  return `${spellOut(newCount)} fresh today — go.`;
 }
 
 function spellOut(n: number): string {
@@ -290,21 +339,6 @@ function spellOut(n: number): string {
   return String(n);
 }
 
-function SetupHint({ user }: { user: DashboardUser }) {
-  const completed = [user.aiConfigured, user.hasResume, user.gmailConnected].filter(Boolean).length;
-  if (completed === 3) return null;
-  return (
-    <Link
-      href="/settings"
-      className="press-feedback inline-flex h-10 items-center gap-2 rounded-full surface-sunken px-4 text-[13px] text-muted-foreground transition-colors duration-200 ease-out hover:text-foreground"
-    >
-      <span className="size-1.5 rounded-full bg-amber-warm" />
-      <span>Complete setup</span>
-      <span className="text-muted-foreground/60">{completed} of 3 done</span>
-    </Link>
-  );
-}
-
 function SetupRow({
   ok,
   icon: Icon,
@@ -322,20 +356,24 @@ function SetupRow({
         href={href}
         className={cn(
           "group/s flex items-center justify-between gap-2 text-[13px] transition-colors duration-150",
-          !ok && "text-muted-foreground hover:text-foreground",
         )}
       >
-        <span className={cn(
-          "flex items-center gap-2.5",
-          ok ? "text-muted-foreground" : "text-muted-foreground group-hover/s:text-foreground",
-        )}>
+        <span
+          className={cn(
+            "flex items-center gap-2.5",
+            ok ? "text-muted-foreground" : "text-muted-foreground group-hover/s:text-foreground",
+          )}
+        >
           <Icon className="size-3.5" strokeWidth={1.75} />
           <span>{label}</span>
         </span>
         {ok ? (
           <CheckCircle2 className="size-3.5 text-sage" strokeWidth={2} />
         ) : (
-          <ArrowRight className="size-3 text-muted-foreground/40 transition-transform duration-150 group-hover/s:translate-x-0.5 group-hover/s:text-muted-foreground" strokeWidth={2} />
+          <ArrowRight
+            className="size-3 text-muted-foreground/40 transition-transform duration-150 group-hover/s:translate-x-0.5 group-hover/s:text-muted-foreground"
+            strokeWidth={2}
+          />
         )}
       </Link>
     </li>
