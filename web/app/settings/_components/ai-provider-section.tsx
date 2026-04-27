@@ -154,10 +154,8 @@ export function AiProviderSection({
                 className={cn(
                   "press-feedback group relative flex flex-col gap-3 rounded-2xl p-4 text-left",
                   "transition-[background-color,box-shadow] duration-200 ease-out",
-                  p.id === "groq" && "sm:col-span-2",
-                  p.id === "rules" && "sm:col-span-2",
                   isActive
-                    ? "surface shadow-[inset_0_0_0_1px_oklch(0.68_0.22_260/30%),0_2px_18px_-6px_oklch(0.68_0.22_260/20%)]"
+                    ? "surface shadow-[inset_0_0_0_1px_oklch(0.886_0.052_53/40%),0_2px_18px_-6px_oklch(0.886_0.052_53/22%)]"
                     : "surface-sunken hover:brightness-110",
                 )}
               >

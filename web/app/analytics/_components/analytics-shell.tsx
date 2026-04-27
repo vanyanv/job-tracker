@@ -92,7 +92,7 @@ export function AnalyticsShell({
             Performance · last 90 days
           </div>
 
-          <div className="mt-6 grid grid-cols-1 gap-y-8 md:grid-cols-2 md:divide-x md:divide-border">
+          <div className="mt-6 grid grid-cols-1 gap-y-8 md:grid-cols-[1fr_auto_1fr] md:items-center md:gap-x-10">
             <KpiHero
               value={responsePct}
               suffix="%"
@@ -104,17 +104,15 @@ export function AnalyticsShell({
                   : `${metrics.totalInterview + metrics.totalRejected} replies · ${metrics.submitted} submitted`
               }
             />
-            <KpiHero
+            <KpiGauge
               value={interviewPct}
-              suffix="%"
+              accent="cornflower"
               label="Interview rate"
-              accent="amber"
-              subtitle={
+              caption={
                 metrics.totalInterview === 0
                   ? "No interview conversions yet."
                   : `${metrics.totalInterview} interview${metrics.totalInterview === 1 ? "" : "s"} so far`
               }
-              indented
             />
           </div>
         </section>
@@ -167,24 +165,24 @@ function KpiHero({
   label,
   subtitle,
   accent,
-  indented,
 }: {
   value: number | string;
   suffix?: string;
   label: string;
   subtitle: string;
-  accent: "apricot" | "amber" | "sage";
-  indented?: boolean;
+  accent: "apricot" | "amber" | "sage" | "cornflower";
 }) {
   const tone =
     accent === "apricot"
       ? "text-foreground"
-      : accent === "amber"
-        ? "text-amber-warm"
-        : "text-sage";
+      : accent === "cornflower"
+        ? "text-[var(--cornflower)]"
+        : accent === "amber"
+          ? "text-amber-warm"
+          : "text-sage";
 
   return (
-    <div className={cn(indented && "md:pl-10")}>
+    <div>
       <div className="label-caps text-muted-foreground">{label}</div>
       <div className="mt-3 flex items-baseline">
         <span
@@ -201,8 +199,104 @@ function KpiHero({
           </span>
         )}
       </div>
-      <p className="mt-3 max-w-[40ch] text-[13.5px] leading-relaxed text-muted-foreground">
+      <p className="mt-3 max-w-[40ch] text-[14px] leading-relaxed text-muted-foreground">
         {subtitle}
+      </p>
+    </div>
+  );
+}
+
+function KpiGauge({
+  value,
+  label,
+  caption,
+  accent,
+}: {
+  value: number;
+  label: string;
+  caption: string;
+  accent: "apricot" | "cornflower" | "sage" | "amber";
+}) {
+  const safe = Math.max(0, Math.min(100, value));
+  const size = 220;
+  const stroke = 16;
+  const r = (size - stroke) / 2;
+  const gapDeg = 90;
+  const arcDeg = 360 - gapDeg;
+  const circumference = 2 * Math.PI * r;
+  const fullArc = (arcDeg / 360) * circumference;
+  const progressLen = (safe / 100) * fullArc;
+  const rotation = -90 + gapDeg / 2;
+
+  const accentVar =
+    accent === "apricot"
+      ? "var(--apricot)"
+      : accent === "cornflower"
+        ? "var(--cornflower)"
+        : accent === "sage"
+          ? "var(--sage)"
+          : "var(--amber-warm)";
+
+  return (
+    <div className="flex flex-col items-center md:items-start">
+      <div
+        className="relative shrink-0"
+        style={{ width: size, height: size }}
+        role="img"
+        aria-label={`${label}: ${safe}%`}
+      >
+        <svg
+          width={size}
+          height={size}
+          viewBox={`0 0 ${size} ${size}`}
+          style={{ transform: `rotate(${rotation}deg)` }}
+          aria-hidden
+        >
+          <circle
+            cx={size / 2}
+            cy={size / 2}
+            r={r}
+            fill="none"
+            stroke="currentColor"
+            strokeOpacity={0.08}
+            strokeWidth={stroke}
+            strokeLinecap="round"
+            strokeDasharray={`${fullArc} ${circumference}`}
+          />
+          {safe > 0 && (
+            <circle
+              cx={size / 2}
+              cy={size / 2}
+              r={r}
+              fill="none"
+              stroke={accentVar}
+              strokeWidth={stroke}
+              strokeLinecap="round"
+              strokeDasharray={`${progressLen} ${circumference}`}
+              className="kpi-gauge-fill"
+              style={
+                {
+                  "--gauge-target": progressLen,
+                  "--gauge-circ": circumference,
+                } as React.CSSProperties
+              }
+            />
+          )}
+        </svg>
+        <div className="absolute inset-0 flex flex-col items-center justify-center">
+          <div className="flex items-baseline">
+            <span className="font-display italic font-medium leading-none tracking-tight tnum text-foreground text-[64px]">
+              {safe}
+            </span>
+            <span className="ml-0.5 font-display italic text-[26px] text-foreground/45">
+              %
+            </span>
+          </div>
+          <div className="mt-1 label-caps text-muted-foreground">{label}</div>
+        </div>
+      </div>
+      <p className="mt-4 max-w-[34ch] text-center text-[14px] leading-relaxed text-muted-foreground md:text-left">
+        {caption}
       </p>
     </div>
   );
@@ -408,7 +502,7 @@ function FunnelCard({ metrics }: { metrics: Metrics }) {
                   <span className="tabular-nums text-foreground">{stage.value}</span>
                 </span>
               </div>
-              <div className="mt-2 h-2 overflow-hidden rounded-sm bg-foreground/[0.04]">
+              <div className="mt-2 h-3.5 overflow-hidden rounded-sm bg-foreground/4">
                 <div
                   className={cn(
                     "h-full rounded-sm transition-[width] duration-700 ease-out",

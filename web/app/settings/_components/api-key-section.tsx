@@ -1,10 +1,9 @@
 "use client";
 
 import * as React from "react";
-import { Copy, Check, RefreshCw, AlertTriangle, Loader2 } from "lucide-react";
+import { Copy, Check, Eye, EyeOff, RefreshCw, AlertTriangle, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { cn } from "@/lib/utils";
 import { SectionHeader } from "./section-header";
 
 export function ApiKeySection({
@@ -49,8 +48,6 @@ export function ApiKeySection({
     }
   }
 
-  const masked = apiKey.replace(/.(?=.{4})/g, "•");
-
   return (
     <div>
       <SectionHeader
@@ -64,16 +61,27 @@ export function ApiKeySection({
         {/* Key display */}
         <div className="rounded-2xl surface-sunken p-1.5">
           <div className="flex items-center gap-2">
-            <code
+            <input
+              type={reveal ? "text" : "password"}
+              value={apiKey}
+              readOnly
+              autoComplete="off"
+              spellCheck={false}
+              aria-label="Extension API key"
+              onFocus={(e) => e.currentTarget.select()}
+              className="flex-1 min-w-0 rounded-xl bg-foreground/5 px-3.5 py-2.5 font-mono text-[13px] tabular-nums text-foreground tracking-wider focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-apricot/60"
+            />
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
               onClick={() => setReveal((r) => !r)}
-              className={cn(
-                "flex-1 min-w-0 cursor-pointer overflow-hidden text-ellipsis whitespace-nowrap rounded-xl bg-foreground/4 px-3.5 py-2.5 font-mono text-[13px] tabular-nums text-foreground transition-colors duration-150 hover:bg-foreground/6",
-                !reveal && "tracking-wider",
-              )}
-              title={reveal ? "Click to hide" : "Click to reveal"}
+              aria-label={reveal ? "Hide key" : "Show key"}
+              className="font-mono"
             >
-              {reveal ? apiKey : masked}
-            </code>
+              {reveal ? <EyeOff className="size-3.5" strokeWidth={1.75} /> : <Eye className="size-3.5" strokeWidth={1.75} />}
+              {reveal ? "Hide" : "Show"}
+            </Button>
             <Button
               type="button"
               variant="ghost"

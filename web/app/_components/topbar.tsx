@@ -32,7 +32,7 @@ export function Topbar({
 }) {
   const pathname = usePathname() ?? "/dashboard";
   return (
-    <header className="sticky top-0 z-30 surface-elevated border-b divider-warm">
+    <header className="sticky top-0 z-30 surface-elevated border-b divider-warm shadow-[0_1px_3px_-1px_oklch(0_0_0/0.06)]">
       <div className="mx-auto flex h-14 max-w-[1400px] items-center justify-between gap-6 px-4 md:px-8">
         <Link href="/dashboard" className="group flex items-center gap-2.5">
           <span className="relative flex size-7 items-center justify-center rounded-md bg-apricot/30">
@@ -111,9 +111,9 @@ function NavLink({
     <Link
       href={href}
       className={cn(
-        "rounded-sm px-3 py-1 text-[12.5px] font-medium transition-colors",
+        "rounded-sm px-3 py-1 text-[12.5px] font-medium transition-colors duration-150",
         active
-          ? "bg-card text-foreground shadow-[inset_0_1px_0_oklch(1_0_0/8%),0_2px_8px_-3px_oklch(0_0_0/15%)]"
+          ? "bg-foreground text-background shadow-[inset_0_1px_0_oklch(1_0_0/12%),0_4px_12px_-4px_oklch(0_0_0/0.25)]"
           : "text-muted-foreground hover:text-foreground",
       )}
     >

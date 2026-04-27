@@ -146,7 +146,7 @@ export function ResumeSection({
                 <div className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground">
                   Summary
                 </div>
-                <p className="mt-1.5 text-sm leading-relaxed text-foreground">
+                <p className="mt-1.5 text-[14px] leading-relaxed text-foreground">
                   {resumeParsed.summary}
                 </p>
               </div>

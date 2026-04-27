@@ -131,6 +131,7 @@ export function DashboardShell({
               caption={newCount > 0 ? "Fresh & unscored" : "All caught up"}
               display
               delay={60}
+              className="lift-on-hover"
             />
             <StatTile
               label="Queued"
@@ -139,6 +140,7 @@ export function DashboardShell({
               caption={queuedCount > 0 ? "Ready to apply" : "Empty"}
               display
               delay={120}
+              className="lift-on-hover"
             />
             <StatTile
               label="Applied"
@@ -147,6 +149,7 @@ export function DashboardShell({
               caption="All time"
               display
               delay={180}
+              className="lift-on-hover"
             />
             <StatTile
               label="Interview"
@@ -155,6 +158,7 @@ export function DashboardShell({
               caption={interviewCount > 0 ? "Active conversations" : "Keep applying"}
               display
               delay={240}
+              className="lift-on-hover"
             />
           </div>
         </section>
@@ -274,14 +278,20 @@ function SetupBlock({
 
 function QueuePreviewBlock({ queuedCount }: { queuedCount: number }) {
   return (
-    <div className="hearth-enter bento-stage-5 rounded-md surface p-5">
-      <div className="flex items-center justify-between">
-        <span className="label-caps text-muted-foreground">Apply Session</span>
-        <span className="font-mono text-[10.5px] tabular-nums text-muted-foreground/70">
+    <div className="hearth-enter bento-stage-5 relative overflow-hidden rounded-md bg-foreground p-5 text-background shadow-[inset_0_1px_0_oklch(1_0_0/8%),0_8px_28px_-12px_oklch(0_0_0/0.35)]">
+      <div
+        aria-hidden
+        className="pointer-events-none absolute -right-12 -top-12 size-40 rounded-full bg-apricot/18 blur-3xl"
+      />
+      <div className="relative flex items-center justify-between">
+        <span className="font-mono text-[10.5px] uppercase tracking-[0.18em] text-background/55">
+          Apply Session
+        </span>
+        <span className="font-mono text-[10.5px] tabular-nums text-background/55">
           {queuedCount} ready
         </span>
       </div>
-      <p className="mt-3 text-[13px] leading-relaxed text-muted-foreground">
+      <p className="relative mt-3 text-[13px] leading-relaxed text-background/72">
         {queuedCount === 0
           ? "Queue jobs you want to apply to. Then run a focused, keyboard-driven session — open tabs in batches, mark as applied, move on."
           : `${queuedCount} role${queuedCount === 1 ? "" : "s"} queued. Open them in batches and apply with one keystroke.`}
@@ -289,7 +299,7 @@ function QueuePreviewBlock({ queuedCount }: { queuedCount: number }) {
       {queuedCount > 0 && (
         <Link
           href="/dashboard/queue"
-          className="press-feedback mt-4 inline-flex h-9 items-center gap-2 rounded-md bg-apricot px-3.5 text-[12.5px] font-medium text-apricot-foreground hover:brightness-105"
+          className="press-feedback relative mt-4 inline-flex h-9 items-center gap-2 rounded-md bg-apricot px-3.5 text-[12.5px] font-medium text-apricot-foreground transition-[filter,transform] duration-150 hover:brightness-105"
         >
           Start session
           <ArrowRight className="size-3.5" strokeWidth={2} />

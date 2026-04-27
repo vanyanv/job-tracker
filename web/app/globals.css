@@ -347,6 +347,20 @@
     }
 }
 
+/* Broken-arc gauge fill — animates dasharray length from 0 → target */
+@keyframes kpi-gauge-fill {
+    from { stroke-dasharray: 0 var(--gauge-circ, 1000); }
+    to { stroke-dasharray: var(--gauge-target, 0) var(--gauge-circ, 1000); }
+}
+.kpi-gauge-fill {
+    animation: kpi-gauge-fill 900ms var(--ease-out) both;
+}
+@media (prefers-reduced-motion: reduce) {
+    .kpi-gauge-fill {
+        animation: none;
+    }
+}
+
 /* Modal entry */
 @keyframes modal-in {
     from { opacity: 0; transform: scale(0.96); }

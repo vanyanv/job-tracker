@@ -256,10 +256,10 @@ export function QueueBoard({
                   }}
                   onMouseEnter={() => setCursor(idx)}
                   className={cn(
-                    "group/r relative flex items-start gap-4 rounded-md px-4 py-3.5 transition-[background-color,box-shadow] duration-200 ease-out md:px-5",
+                    "group/r relative flex items-start gap-4 rounded-md px-4 py-3.5 transition-[background-color,box-shadow] duration-100 ease-out md:px-5",
                     isCursor
-                      ? "surface shadow-[inset_2px_0_0_var(--apricot),inset_0_0_0_1px_oklch(0.886_0.052_53/22%),0_2px_24px_-8px_oklch(0.886_0.052_53/30%)]"
-                      : "bg-card/30 hover:bg-card/60",
+                      ? "surface border-l-2 border-apricot shadow-[inset_0_0_0_1px_oklch(0.886_0.052_53/22%),0_2px_24px_-8px_oklch(0.886_0.052_53/30%)]"
+                      : "bg-card/30 hover:bg-card/60 border-l-2 border-transparent",
                   )}
                 >
                   <ScoreRing score={item.score ?? 0} size="md" className="mt-0.5" />
