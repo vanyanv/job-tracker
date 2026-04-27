@@ -4,6 +4,7 @@ import pLimit from "p-limit";
 import { prisma } from "@/lib/prisma";
 import { getProvider } from "@/lib/ai/provider";
 import type { ResumeProfile } from "@/lib/ai/provider";
+import { normalizeCompany } from "@/lib/companies";
 import { IngestBodySchema, type JobRecord } from "./schema";
 import { tagAndUpdateNewJobs } from "./tagger-pass";
 
@@ -15,6 +16,7 @@ type EligibleUser = {
   aiProvider: string | null;
   aiApiKey: string | null;
   skillsProfile: string;
+  hiddenCompanies: string[];
 };
 type JobInput = {
   title: string;
@@ -105,11 +107,20 @@ async function scoreForUser(
     summary: "",
   };
 
-  const createData = Array.from(newJobIds).map((jobId) => ({
-    userId: user.id,
-    jobId,
-    status: "new",
-  }));
+  const newJobsList = await prisma.job.findMany({
+    where: { id: { in: Array.from(newJobIds) } },
+    select: { id: true, company: true },
+  });
+  const hiddenSet = new Set(user.hiddenCompanies);
+  const createData = newJobsList.map((j) => {
+    const isHidden = hiddenSet.has(normalizeCompany(j.company));
+    return {
+      userId: user.id,
+      jobId: j.id,
+      status: isHidden ? "skipped" : "new",
+      autoSkippedReason: isHidden ? "hidden_company" : null,
+    };
+  });
 
   let createdCount = 0;
   try {
@@ -182,7 +193,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
 
   const eligibleRaw = await prisma.user.findMany({
     where: { skillsProfile: { not: null } },
-    select: { id: true, aiProvider: true, aiApiKey: true, skillsProfile: true },
+    select: { id: true, aiProvider: true, aiApiKey: true, skillsProfile: true, hiddenCompanies: true },
   });
   const eligibleUsers: EligibleUser[] = eligibleRaw.filter(
     (u): u is EligibleUser => u.skillsProfile !== null,

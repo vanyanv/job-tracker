@@ -148,10 +148,14 @@ describe("POST /api/jobs/ingest — deduplication", () => {
 describe("POST /api/jobs/ingest — scoring", () => {
   it("creates and scores UserJob rows for eligible users", async () => {
     (prisma.user.findMany as ReturnType<typeof vi.fn>).mockResolvedValue([
-      { id: "user-1", aiProvider: null, aiApiKey: null, skillsProfile: "TypeScript,React" },
+      { id: "user-1", aiProvider: null, aiApiKey: null, skillsProfile: "TypeScript,React", hiddenCompanies: [] },
     ]);
     (prisma.userJob.createMany as ReturnType<typeof vi.fn>).mockResolvedValue({ count: 1 });
     (prisma.userJob.findMany as ReturnType<typeof vi.fn>).mockResolvedValue([{ id: "uj-1", jobId: "job-1" }]);
+    // First call: deduplication (existing URL check); second call: scoreForUser company lookup
+    (prisma.job.findMany as ReturnType<typeof vi.fn>)
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([{ id: "job-1", company: "Acme" }]);
 
     const res = await POST(makeRequest({ jobs: [VALID_JOB] }, VALID_TOKEN));
     expect(res.status).toBe(200);
@@ -173,10 +177,14 @@ describe("POST /api/jobs/ingest — scoring", () => {
 
   it("records provider errors but still returns HTTP 200", async () => {
     (prisma.user.findMany as ReturnType<typeof vi.fn>).mockResolvedValue([
-      { id: "user-1", aiProvider: null, aiApiKey: null, skillsProfile: "TypeScript" },
+      { id: "user-1", aiProvider: null, aiApiKey: null, skillsProfile: "TypeScript", hiddenCompanies: [] },
     ]);
     (prisma.userJob.createMany as ReturnType<typeof vi.fn>).mockResolvedValue({ count: 1 });
     (prisma.userJob.findMany as ReturnType<typeof vi.fn>).mockResolvedValue([{ id: "uj-1", jobId: "job-1" }]);
+    // First call: deduplication; second call: scoreForUser company lookup
+    (prisma.job.findMany as ReturnType<typeof vi.fn>)
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([{ id: "job-1", company: "Acme" }]);
     mockScoreJob.mockRejectedValue(new Error("Groq API error: rate limit exceeded"));
 
     const res = await POST(makeRequest({ jobs: [VALID_JOB] }, VALID_TOKEN));
@@ -191,7 +199,7 @@ describe("POST /api/jobs/ingest — scoring", () => {
     (prisma.job.findMany as ReturnType<typeof vi.fn>).mockResolvedValue([{ url: VALID_JOB.url }]);
     (prisma.job.upsert as ReturnType<typeof vi.fn>).mockResolvedValue({ id: "job-1", url: VALID_JOB.url });
     (prisma.user.findMany as ReturnType<typeof vi.fn>).mockResolvedValue([
-      { id: "user-1", aiProvider: null, aiApiKey: null, skillsProfile: "TypeScript" },
+      { id: "user-1", aiProvider: null, aiApiKey: null, skillsProfile: "TypeScript", hiddenCompanies: [] },
     ]);
 
     const res = await POST(makeRequest({ jobs: [VALID_JOB] }, VALID_TOKEN));
