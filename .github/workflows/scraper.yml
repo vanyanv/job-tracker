@@ -25,6 +25,8 @@ jobs:
       VERCEL_URL: ${{ secrets.VERCEL_URL }}
       INGEST_BEARER_TOKEN: ${{ secrets.INGEST_BEARER_TOKEN }}
       BLOB_READ_WRITE_TOKEN: ${{ secrets.BLOB_READ_WRITE_TOKEN }}
+      BRAVE_SEARCH_API_KEY: ${{ secrets.BRAVE_SEARCH_API_KEY }}
+      SEARCH_QUERIES_JSON: ${{ vars.SEARCH_QUERIES_JSON }}
       SCRAPER_HOURS_WINDOW: ${{ inputs.hoursWindow || '24' }}
     steps:
       - uses: actions/checkout@v4

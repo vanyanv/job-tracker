@@ -3,10 +3,19 @@ import { NextRequest } from "next/server";
 
 vi.mock("@/lib/prisma", () => ({
   prisma: {
-    job: { findMany: vi.fn(), upsert: vi.fn() },
+    job: { findMany: vi.fn(), upsert: vi.fn(), update: vi.fn() },
     userJob: { createMany: vi.fn(), findMany: vi.fn(), update: vi.fn() },
     user: { findMany: vi.fn() },
   },
+}));
+
+vi.mock("@/lib/ai/tagger", () => ({
+  tagJob: vi.fn().mockResolvedValue({
+    level: "senior", workMode: "remote",
+    locationCity: "New York", locationCountry: "US",
+    salaryMin: 180000, salaryMax: 240000, minYoE: 5,
+    stackTags: ["react", "typescript"],
+  }),
 }));
 
 const mockScoreJob = vi.fn();
@@ -15,6 +24,7 @@ vi.mock("@/lib/ai/provider", () => ({
 }));
 
 import { POST } from "./route";
+import { tagAndUpdateNewJobs } from "./tagger-pass";
 import { prisma } from "@/lib/prisma";
 
 const VALID_TOKEN = "test-token-abc123";
@@ -42,6 +52,7 @@ function makeRequest(body: unknown, token?: string): NextRequest {
 beforeEach(() => {
   vi.clearAllMocks();
   process.env.INGEST_BEARER_TOKEN = VALID_TOKEN;
+  delete process.env.SYSTEM_AI_API_KEY; // ensure tagger is skipped in POST tests
   (prisma.job.findMany as ReturnType<typeof vi.fn>).mockResolvedValue([]);
   (prisma.job.upsert as ReturnType<typeof vi.fn>).mockResolvedValue({ id: "job-1", url: VALID_JOB.url });
   (prisma.user.findMany as ReturnType<typeof vi.fn>).mockResolvedValue([]);
@@ -137,10 +148,14 @@ describe("POST /api/jobs/ingest — deduplication", () => {
 describe("POST /api/jobs/ingest — scoring", () => {
   it("creates and scores UserJob rows for eligible users", async () => {
     (prisma.user.findMany as ReturnType<typeof vi.fn>).mockResolvedValue([
-      { id: "user-1", aiProvider: null, aiApiKey: null, skillsProfile: "TypeScript,React" },
+      { id: "user-1", aiProvider: null, aiApiKey: null, skillsProfile: "TypeScript,React", hiddenCompanies: [] },
     ]);
     (prisma.userJob.createMany as ReturnType<typeof vi.fn>).mockResolvedValue({ count: 1 });
     (prisma.userJob.findMany as ReturnType<typeof vi.fn>).mockResolvedValue([{ id: "uj-1", jobId: "job-1" }]);
+    // First call: deduplication (existing URL check); second call: scoreForUser company lookup
+    (prisma.job.findMany as ReturnType<typeof vi.fn>)
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([{ id: "job-1", company: "Acme" }]);
 
     const res = await POST(makeRequest({ jobs: [VALID_JOB] }, VALID_TOKEN));
     expect(res.status).toBe(200);
@@ -162,10 +177,14 @@ describe("POST /api/jobs/ingest — scoring", () => {
 
   it("records provider errors but still returns HTTP 200", async () => {
     (prisma.user.findMany as ReturnType<typeof vi.fn>).mockResolvedValue([
-      { id: "user-1", aiProvider: null, aiApiKey: null, skillsProfile: "TypeScript" },
+      { id: "user-1", aiProvider: null, aiApiKey: null, skillsProfile: "TypeScript", hiddenCompanies: [] },
     ]);
     (prisma.userJob.createMany as ReturnType<typeof vi.fn>).mockResolvedValue({ count: 1 });
     (prisma.userJob.findMany as ReturnType<typeof vi.fn>).mockResolvedValue([{ id: "uj-1", jobId: "job-1" }]);
+    // First call: deduplication; second call: scoreForUser company lookup
+    (prisma.job.findMany as ReturnType<typeof vi.fn>)
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([{ id: "job-1", company: "Acme" }]);
     mockScoreJob.mockRejectedValue(new Error("Groq API error: rate limit exceeded"));
 
     const res = await POST(makeRequest({ jobs: [VALID_JOB] }, VALID_TOKEN));
@@ -180,7 +199,7 @@ describe("POST /api/jobs/ingest — scoring", () => {
     (prisma.job.findMany as ReturnType<typeof vi.fn>).mockResolvedValue([{ url: VALID_JOB.url }]);
     (prisma.job.upsert as ReturnType<typeof vi.fn>).mockResolvedValue({ id: "job-1", url: VALID_JOB.url });
     (prisma.user.findMany as ReturnType<typeof vi.fn>).mockResolvedValue([
-      { id: "user-1", aiProvider: null, aiApiKey: null, skillsProfile: "TypeScript" },
+      { id: "user-1", aiProvider: null, aiApiKey: null, skillsProfile: "TypeScript", hiddenCompanies: [] },
     ]);
 
     const res = await POST(makeRequest({ jobs: [VALID_JOB] }, VALID_TOKEN));
@@ -205,5 +224,24 @@ describe("POST /api/jobs/ingest — response shape", () => {
       userJobsScored: expect.any(Number),
       errors: expect.any(Array),
     });
+  });
+});
+
+describe("tagAndUpdateNewJobs", () => {
+  it("calls tagger and persists fields", async () => {
+    const update = vi.fn().mockResolvedValue({});
+    const findMany = vi.fn().mockResolvedValue([
+      { id: "j1", title: "Sr FE", company: "Acme", location: "NYC", description: "..." },
+    ]);
+    const fakePrisma = { job: { findMany, update } } as never;
+    await tagAndUpdateNewJobs(fakePrisma, new Set(["j1"]), { apiKey: "k", model: "llama-3.3-70b-versatile" });
+    expect(update).toHaveBeenCalledWith(expect.objectContaining({
+      where: { id: "j1" },
+      data: expect.objectContaining({
+        level: "senior", workMode: "remote",
+        salaryMin: 180000, stackTags: ["react", "typescript"],
+        taggedAt: expect.any(Date), tagModel: "llama-3.3-70b-versatile",
+      }),
+    }));
   });
 });

@@ -5,6 +5,9 @@ import { Search, Loader2, Inbox } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { JobRow } from "./job-row";
+import { FilterBar, EMPTY_FILTERS, type FilterState } from "./filter-bar";
+import { SavedSearchesStrip, type SavedSearch } from "./saved-searches-strip";
+import { JobDetailPanel } from "./job-detail-panel";
 
 export type FeedItem = {
   id: string;
@@ -13,6 +16,7 @@ export type FeedItem = {
   status: string;
   appliedAt: string | null;
   emailNote: string | null;
+  autoSkippedReason: string | null;
   job: {
     id: string;
     title: string;
@@ -23,10 +27,55 @@ export type FeedItem = {
     postedAt: string;
     foundAt: string;
     snapshotUrl: string | null;
+    level: string | null;
+    workMode: string | null;
+    locationCity: string | null;
+    locationCountry: string | null;
+    salaryMin: number | null;
+    salaryMax: number | null;
+    minYoE: number | null;
+    stackTags: string[];
   };
 };
 
 type Sort = "score" | "fresh";
+
+type Facets = {
+  level?: Record<string, number>;
+  workMode?: Record<string, number>;
+  source?: Record<string, number>;
+  stackTags?: Record<string, number>;
+};
+
+const KNOWN_STACK = [
+  "react", "nextjs", "typescript", "javascript", "node", "go", "rust",
+  "python", "java", "kotlin", "swift", "ruby", "rails", "django",
+  "postgresql", "mysql", "redis", "kafka", "kubernetes", "docker",
+  "aws", "gcp", "terraform", "graphql", "grpc",
+];
+
+function mergeFilters(base: FilterState, raw: Record<string, unknown>): FilterState {
+  const arr = (k: string): string[] =>
+    Array.isArray(raw[k]) ? (raw[k] as string[]) : [];
+  const num = (k: string): number | null =>
+    typeof raw[k] === "number" ? (raw[k] as number) : null;
+  let postedWithinHours: number | null = base.postedWithinHours;
+  if (typeof raw.postedAfter === "string") {
+    const hrs = Math.round(
+      (Date.now() - new Date(raw.postedAfter as string).getTime()) / 36e5,
+    );
+    postedWithinHours = [24, 72, 168, 720].includes(hrs) ? hrs : null;
+  }
+  return {
+    level: arr("level"),
+    workMode: arr("workMode"),
+    source: arr("source"),
+    stackTags: arr("stackTags"),
+    salaryMin: num("salaryMin"),
+    maxYoE: num("maxYoE"),
+    postedWithinHours,
+  };
+}
 
 export function JobFeed({
   statuses,
@@ -47,10 +96,25 @@ export function JobFeed({
   const [total, setTotal] = React.useState<number | null>(null);
   const skipInitialFetch = React.useRef(initialItems.length > 0);
 
+  // New filter state
+  const [filters, setFilters] = React.useState<FilterState>(EMPTY_FILTERS);
+  const [savedSearches, setSavedSearches] = React.useState<SavedSearch[]>([]);
+  const [activeSavedSearchId, setActiveSavedSearchId] = React.useState<string | null>(null);
+  const [openJobId, setOpenJobId] = React.useState<string | null>(null);
+  const [facets, setFacets] = React.useState<Facets | undefined>(undefined);
+
   React.useEffect(() => {
     const t = setTimeout(() => setDebouncedQ(q.trim()), 220);
     return () => clearTimeout(t);
   }, [q]);
+
+  // Load saved searches on mount
+  React.useEffect(() => {
+    fetch("/api/saved-searches")
+      .then((r) => r.ok ? r.json() : { items: [] })
+      .then((d: { items: SavedSearch[] }) => setSavedSearches(d.items ?? []))
+      .catch(() => {/* ignore */});
+  }, []);
 
   const fetchItems = React.useCallback(
     async (signal: AbortSignal) => {
@@ -64,16 +128,33 @@ export function JobFeed({
         });
         if (debouncedQ) params.set("q", debouncedQ);
         if (minScore > 0) params.set("minScore", String(minScore));
+
+        // Rich filters
+        if (filters.level.length) params.set("level", filters.level.join(","));
+        if (filters.workMode.length) params.set("workMode", filters.workMode.join(","));
+        if (filters.source.length) params.set("source", filters.source.join(","));
+        if (filters.stackTags.length) params.set("stackTags", filters.stackTags.join(","));
+        if (filters.salaryMin !== null) params.set("salaryMin", String(filters.salaryMin));
+        if (filters.maxYoE !== null) params.set("maxYoE", String(filters.maxYoE));
+        if (filters.postedWithinHours !== null) {
+          params.set(
+            "postedAfter",
+            new Date(Date.now() - filters.postedWithinHours * 36e5).toISOString(),
+          );
+        }
+
         const res = await fetch(`/api/jobs?${params}`, { signal, cache: "no-store" });
         if (!res.ok) throw new Error(`Failed (${res.status})`);
         const data = (await res.json()) as {
           items: FeedItem[];
           total: number;
           countsByStatus: Record<string, number>;
+          facets?: Facets;
         };
         setItems(data.items);
         setTotal(data.total);
         onCountsChange(data.countsByStatus);
+        if (data.facets) setFacets(data.facets);
       } catch (e) {
         if ((e as Error).name === "AbortError") return;
         setError(e instanceof Error ? e.message : "Failed to load jobs");
@@ -81,7 +162,7 @@ export function JobFeed({
         setLoading(false);
       }
     },
-    [statuses, debouncedQ, sort, minScore, onCountsChange],
+    [statuses, debouncedQ, sort, minScore, filters, onCountsChange],
   );
 
   React.useEffect(() => {
@@ -101,11 +182,90 @@ export function JobFeed({
     });
   }
 
+  // Saved search handlers
+  async function handleSaveCurrent(name: string) {
+    const filtersPayload: Record<string, unknown> = {};
+    if (filters.level.length) filtersPayload.level = filters.level;
+    if (filters.workMode.length) filtersPayload.workMode = filters.workMode;
+    if (filters.source.length) filtersPayload.source = filters.source;
+    if (filters.stackTags.length) filtersPayload.stackTags = filters.stackTags;
+    if (filters.salaryMin !== null) filtersPayload.salaryMin = filters.salaryMin;
+    if (filters.maxYoE !== null) filtersPayload.maxYoE = filters.maxYoE;
+    if (filters.postedWithinHours !== null) {
+      filtersPayload.postedAfter = new Date(
+        Date.now() - filters.postedWithinHours * 36e5,
+      ).toISOString();
+    }
+    const res = await fetch("/api/saved-searches", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name, filters: filtersPayload, sortIndex: savedSearches.length }),
+    });
+    if (!res.ok) return;
+    const data = (await res.json()) as SavedSearch;
+    setSavedSearches((prev) => [...prev, data]);
+  }
+
+  async function handleDeleteSaved(id: string) {
+    await fetch(`/api/saved-searches/${id}`, { method: "DELETE" });
+    setSavedSearches((prev) => prev.filter((s) => s.id !== id));
+  }
+
+  function handleSelectSaved(id: string | null) {
+    setActiveSavedSearchId(id);
+    if (id === null) {
+      setFilters(EMPTY_FILTERS);
+      return;
+    }
+    const found = savedSearches.find((s) => s.id === id);
+    if (found) {
+      setFilters(mergeFilters(EMPTY_FILTERS, found.filters));
+    }
+  }
+
+  // Panel action handler
+  async function handlePanelAction(action: "queued" | "applied" | "skipped") {
+    if (!openJobId) return;
+    const res = await fetch(`/api/jobs/${openJobId}/status`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status: action }),
+    });
+    if (!res.ok) return;
+    const data = (await res.json()) as { status: string; appliedAt: string | null };
+    const item = items.find((it) => it.id === openJobId);
+    if (item) {
+      const removeFromList =
+        ["new", "queued"].includes(item.status) && !["new", "queued"].includes(action);
+      patchItem(openJobId, { status: data.status, appliedAt: data.appliedAt }, removeFromList);
+    }
+  }
+
+  // Hide company handler
+  async function handleHideCompany(company: string) {
+    await fetch(`/api/users/me/hidden-companies`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ company }),
+    });
+    // Remove all items from this company from the list
+    setItems((prev) => prev.filter((it) => it.job.company !== company));
+  }
+
   return (
     <section className="flex flex-col gap-5">
-      {/* Filter bar */}
+      {/* Saved searches strip */}
+      <SavedSearchesStrip
+        items={savedSearches}
+        activeId={activeSavedSearchId}
+        onSelect={handleSelectSaved}
+        onSaveCurrent={handleSaveCurrent}
+        onDelete={handleDeleteSaved}
+      />
+
+      {/* Search + sort bar */}
       <div className="flex flex-wrap items-center gap-3">
-        <div className="relative min-w-[260px] flex-1">
+        <div className="relative min-w-65 flex-1">
           <Search
             className="pointer-events-none absolute left-3.5 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground"
             strokeWidth={1.75}
@@ -148,6 +308,17 @@ export function JobFeed({
         </div>
       </div>
 
+      {/* Rich filter bar */}
+      <FilterBar
+        value={filters}
+        onChange={(next) => {
+          setFilters(next);
+          setActiveSavedSearchId(null);
+        }}
+        facets={facets}
+        knownStackTags={KNOWN_STACK}
+      />
+
       {/* Feed */}
       {error ? (
         <ErrorState message={error} />
@@ -159,11 +330,19 @@ export function JobFeed({
         <ul className="flex flex-col gap-2">
           {items.map((item) => (
             <li key={item.id}>
-              <JobRow item={item} onChange={patchItem} />
+              <JobRow item={item} onChange={patchItem} onOpenDetail={setOpenJobId} />
             </li>
           ))}
         </ul>
       )}
+
+      {/* Detail panel */}
+      <JobDetailPanel
+        jobId={openJobId}
+        onClose={() => setOpenJobId(null)}
+        onAction={handlePanelAction}
+        onHideCompany={handleHideCompany}
+      />
     </section>
   );
 }

@@ -23,9 +23,11 @@ const SOURCE_LABEL: Record<string, string> = {
 export function JobRow({
   item,
   onChange,
+  onOpenDetail,
 }: {
   item: FeedItem;
   onChange: (id: string, patch: Partial<FeedItem>, removeFromList: boolean) => void;
+  onOpenDetail?: (jobId: string) => void;
 }) {
   const [pending, setPending] = React.useState<string | null>(null);
   const [expanded, setExpanded] = React.useState(false);
@@ -63,14 +65,13 @@ export function JobRow({
 
       <div className="min-w-0 flex-1">
         <div className="flex flex-wrap items-baseline gap-x-2.5 gap-y-1">
-          <a
-            href={item.job.url}
-            target="_blank"
-            rel="noreferrer"
-            className="font-display text-[16px] font-medium leading-snug tracking-tight text-foreground decoration-apricot/40 underline-offset-4 transition-colors duration-200 hover:text-foreground/80 hover:underline"
+          <button
+            type="button"
+            onClick={() => onOpenDetail?.(item.job.id)}
+            className="font-display text-[16px] font-medium leading-snug tracking-tight text-foreground decoration-apricot/40 underline-offset-4 transition-colors duration-200 hover:text-foreground/80 hover:underline text-left"
           >
             {item.job.title}
-          </a>
+          </button>
           <span className="text-muted-foreground/40">·</span>
           <span className="text-[13.5px] text-muted-foreground">
             {item.job.company}
@@ -96,6 +97,9 @@ export function JobRow({
             </>
           )}
         </div>
+
+        {/* Chip row: level, workMode, salary, freshness, stack tags */}
+        <JobChips item={item} />
 
         {expanded && item.scoreReason && (
           <p className="mt-3 flex items-start gap-2 rounded-md surface-sunken px-3 py-2.5 text-[12.5px] leading-relaxed text-foreground/80">
@@ -236,4 +240,70 @@ function relTime(iso: string): string {
   if (w < 5) return `${w}w ago`;
   const mo = Math.floor(d / 30);
   return `${mo}mo ago`;
+}
+
+function FreshnessDot({ postedAt }: { postedAt: string }) {
+  const ageHrs = (Date.now() - new Date(postedAt).getTime()) / 36e5;
+  const cls =
+    ageHrs <= 6
+      ? "bg-sage"
+      : ageHrs <= 24
+        ? "bg-apricot"
+        : "bg-muted-foreground/40";
+  return (
+    <span
+      className={cn("inline-block size-1.5 rounded-full shrink-0", cls)}
+      aria-hidden
+    />
+  );
+}
+
+function JobChips({ item }: { item: FeedItem }) {
+  const { level, workMode, salaryMin, salaryMax, stackTags, postedAt } = item.job;
+
+  const salary =
+    salaryMin || salaryMax
+      ? salaryMin && salaryMax
+        ? `$${Math.round(salaryMin / 1000)}k–$${Math.round(salaryMax / 1000)}k`
+        : salaryMin
+          ? `$${Math.round(salaryMin / 1000)}k+`
+          : `up to $${Math.round((salaryMax ?? 0) / 1000)}k`
+      : null;
+
+  const hasChips =
+    (level && level !== "unknown") ||
+    (workMode && workMode !== "unknown") ||
+    salary ||
+    (stackTags && stackTags.length > 0);
+
+  if (!hasChips) return null;
+
+  return (
+    <div className="mt-2 flex flex-wrap items-center gap-1.5">
+      <FreshnessDot postedAt={postedAt} />
+      {level && level !== "unknown" && (
+        <span className="rounded-sm bg-foreground/6 px-1.5 py-0.5 font-mono text-[10px] uppercase tracking-[0.04em] text-muted-foreground">
+          {level}
+        </span>
+      )}
+      {workMode && workMode !== "unknown" && (
+        <span className="rounded-sm bg-foreground/6 px-1.5 py-0.5 font-mono text-[10px] uppercase tracking-[0.04em] text-muted-foreground">
+          {workMode}
+        </span>
+      )}
+      {salary && (
+        <span className="rounded-sm bg-apricot/15 px-1.5 py-0.5 font-mono text-[10px] tabular-nums text-apricot shadow-[inset_0_0_0_1px_oklch(0.886_0.052_53/25%)]">
+          {salary}
+        </span>
+      )}
+      {stackTags?.slice(0, 4).map((tag) => (
+        <span
+          key={tag}
+          className="rounded-sm bg-foreground/4 px-1.5 py-0.5 font-mono text-[10px] text-muted-foreground/70"
+        >
+          {tag}
+        </span>
+      ))}
+    </div>
+  );
 }

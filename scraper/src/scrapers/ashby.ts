@@ -46,3 +46,32 @@ export async function scrapeAshby(): Promise<JobRecord[]> {
   );
   return results.flat();
 }
+
+export async function fetchOneAshby(
+  org: string,
+  jobId: string,
+  company?: string,
+): Promise<JobRecord | null> {
+  const url = `https://api.ashbyhq.com/posting-api/job-board/${org}`;
+  try {
+    const res = await fetch(url, { signal: AbortSignal.timeout(10_000) });
+    if (!res.ok) return null;
+    const data = (await res.json()) as { jobs?: AshbyJob[] };
+    const j = (data.jobs ?? []).find(
+      (x) => x.jobUrl?.endsWith(`/${jobId}`) && x.isListed && x.publishedAt,
+    );
+    if (!j || !j.publishedAt) return null;
+    return {
+      url: j.jobUrl,
+      title: j.title,
+      company: company ?? orgToCompany(org),
+      location: j.location || j.workplaceType || "",
+      description: j.descriptionPlain ?? null,
+      source: "ashby",
+      postedAt: new Date(j.publishedAt).toISOString(),
+      snapshotUrl: null,
+    };
+  } catch {
+    return null;
+  }
+}
