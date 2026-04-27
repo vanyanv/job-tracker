@@ -1,151 +1,102 @@
 import Link from "next/link";
 import { Briefcase } from "lucide-react";
 import { signIn } from "@/auth";
-import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
+import { WarmGlow } from "@/app/_components/warm-glow";
 
 export default function SignInPage() {
   return (
-    <div className="relative flex min-h-[100dvh] flex-col items-center justify-center overflow-hidden bg-background px-4 py-10 md:px-6">
-      {/* ambient corner glow — single emerald accent, soft */}
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-0 -z-10 opacity-[0.5] dark:opacity-[0.35]"
-        style={{
-          background:
-            "radial-gradient(900px 500px at 88% -10%, oklch(0.696 0.17 162.48 / 0.12), transparent 60%)",
-        }}
-      />
+    <div className="relative flex min-h-[100dvh] flex-col items-center justify-center overflow-hidden bg-background px-4 py-10">
+      <WarmGlow position="top-right" size="xl" hue="apricot" />
+      <WarmGlow position="bottom-left" size="lg" hue="sage" className="opacity-60" />
 
-      <div className="w-full max-w-sm md:max-w-3xl">
-        <Card className="overflow-hidden rounded-2xl border-foreground/8 bg-card/60 ring-0 shadow-[0_1px_0_rgba(0,0,0,0.02),0_24px_40px_-32px_rgba(0,0,0,0.18)] gap-0 py-0">
-          <CardContent className="grid p-0 md:grid-cols-2">
-            {/* Left — sign-in actions */}
-            <div className="p-7 md:p-9">
-              <Link
-                href="/"
-                className="inline-flex items-center gap-2 text-sm font-medium tracking-tight"
+      <div className="relative w-full max-w-[420px]">
+        <Link
+          href="/"
+          className="mx-auto mb-10 flex w-fit items-center gap-2.5"
+        >
+          <span className="flex size-9 items-center justify-center rounded-2xl surface">
+            <Briefcase className="size-4 text-apricot" strokeWidth={1.75} />
+          </span>
+          <span className="font-display text-base font-medium tracking-tight">
+            Job Tracker
+          </span>
+        </Link>
+
+        <div className="rounded-3xl surface px-7 py-9 md:px-9 md:py-11">
+          <div className="text-center">
+            <div className="font-mono text-[10px] uppercase tracking-[0.22em] text-muted-foreground">
+              Welcome
+            </div>
+            <h1 className="hearth-enter mt-3 font-display text-[34px] leading-[1.05] tracking-tight md:text-[40px]">
+              Find your next role,
+              <br />
+              <span className="italic font-light text-foreground/70">calmly.</span>
+            </h1>
+            <p className="mx-auto mt-4 max-w-[34ch] text-[14px] leading-relaxed text-muted-foreground">
+              Continue with your account to access your pipeline.
+            </p>
+          </div>
+
+          <div className="mt-9 flex flex-col gap-2.5">
+            <form
+              action={async () => {
+                "use server";
+                await signIn("google", { redirectTo: "/dashboard" });
+              }}
+            >
+              <Button
+                type="submit"
+                variant="outline"
+                size="lg"
+                className="w-full justify-center gap-2.5"
               >
-                <span className="flex size-7 items-center justify-center rounded-md border border-foreground/10 bg-foreground/[0.03]">
-                  <Briefcase className="size-3.5" strokeWidth={1.75} />
-                </span>
-                <span>Job Tracker</span>
-              </Link>
+                <GoogleMark />
+                Continue with Google
+              </Button>
+            </form>
+            <form
+              action={async () => {
+                "use server";
+                await signIn("github", { redirectTo: "/dashboard" });
+              }}
+            >
+              <Button
+                type="submit"
+                variant="outline"
+                size="lg"
+                className="w-full justify-center gap-2.5"
+              >
+                <GitHubMark />
+                Continue with GitHub
+              </Button>
+            </form>
+          </div>
 
-              <div className="mt-10">
-                <div className="font-mono text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
-                  Welcome
-                </div>
-                <h1 className="mt-1.5 text-3xl font-medium tracking-tighter">
-                  Sign in.
-                </h1>
-                <p className="mt-2 max-w-[34ch] text-sm leading-relaxed text-muted-foreground">
-                  Continue with your work account to access your pipeline.
-                </p>
-              </div>
+          <div className="mt-7 flex items-center justify-center gap-2.5 text-[11px] text-muted-foreground">
+            <span className="relative flex size-1.5">
+              <span className="absolute inline-flex size-full animate-ping rounded-full bg-sage/60" />
+              <span className="relative inline-flex size-1.5 rounded-full bg-sage" />
+            </span>
+            <span className="font-mono uppercase tracking-[0.16em]">
+              Scraper running · every 2h
+            </span>
+          </div>
+        </div>
 
-              <div className="mt-8 flex flex-col gap-3">
-                <form
-                  action={async () => {
-                    "use server";
-                    await signIn("google", { redirectTo: "/dashboard" });
-                  }}
-                >
-                  <Button type="submit" variant="outline" size="lg" className="w-full justify-center gap-2.5">
-                    <GoogleMark />
-                    Continue with Google
-                  </Button>
-                </form>
-                <form
-                  action={async () => {
-                    "use server";
-                    await signIn("github", { redirectTo: "/dashboard" });
-                  }}
-                >
-                  <Button type="submit" variant="outline" size="lg" className="w-full justify-center gap-2.5">
-                    <GitHubMark />
-                    Continue with GitHub
-                  </Button>
-                </form>
-              </div>
-
-              <Separator className="my-7 bg-foreground/5" />
-
-              <p className="text-balance text-xs leading-relaxed text-muted-foreground">
-                By continuing, you agree to the{" "}
-                <a
-                  href="/terms"
-                  className="underline underline-offset-2 hover:text-foreground"
-                >
-                  Terms
-                </a>{" "}
-                and{" "}
-                <a
-                  href="/privacy"
-                  className="underline underline-offset-2 hover:text-foreground"
-                >
-                  Privacy
-                </a>{" "}
-                policy.
-              </p>
-            </div>
-
-            {/* Right — brand panel (asymmetric, no image needed) */}
-            <div className="relative hidden border-l border-foreground/5 bg-foreground/[0.015] p-9 md:flex md:flex-col">
-              <div
-                aria-hidden
-                className="pointer-events-none absolute inset-0"
-                style={{
-                  background:
-                    "radial-gradient(420px 280px at 80% 110%, oklch(0.696 0.17 162.48 / 0.10), transparent 65%)",
-                }}
-              />
-
-              <div className="relative">
-                <div className="font-mono text-[10px] uppercase tracking-[0.18em] text-emerald-700 dark:text-emerald-400">
-                  Pipeline · Live
-                </div>
-                <p className="mt-3 max-w-[26ch] text-2xl font-medium tracking-tighter leading-tight">
-                  Apply to fresh roles before they hit the front page.
-                </p>
-              </div>
-
-              <ol className="relative mt-auto space-y-4">
-                <Step n="01" label="Scrape" copy="Ashby, Greenhouse, Lever — every two hours." />
-                <Step n="02" label="Score" copy="Each role ranked against your resume." />
-                <Step n="03" label="Apply" copy="Batch-open your queue and burn through it." />
-                <Step n="04" label="Track" copy="Gmail sync flags interviews and rejections." />
-              </ol>
-
-              <div className="relative mt-8 flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.16em] text-muted-foreground">
-                <span className="relative flex size-1.5">
-                  <span className="absolute inline-flex size-full animate-ping rounded-full bg-emerald-500/60" />
-                  <span className="relative inline-flex size-1.5 rounded-full bg-emerald-500" />
-                </span>
-                Scraper running
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        <p className="mt-6 text-balance text-center text-[11px] leading-relaxed text-muted-foreground/80">
+          By continuing, you agree to the{" "}
+          <a href="/terms" className="underline underline-offset-2 hover:text-foreground">
+            Terms
+          </a>{" "}
+          and{" "}
+          <a href="/privacy" className="underline underline-offset-2 hover:text-foreground">
+            Privacy
+          </a>{" "}
+          policy.
+        </p>
       </div>
     </div>
-  );
-}
-
-function Step({ n, label, copy }: { n: string; label: string; copy: string }) {
-  return (
-    <li className="flex items-start gap-3">
-      <span className="mt-0.5 font-mono text-[10px] tabular-nums tracking-wide text-muted-foreground/70">
-        {n}
-      </span>
-      <div className="min-w-0 flex-1 border-l border-foreground/5 pl-3">
-        <div className="text-sm font-medium tracking-tight text-foreground">
-          {label}
-        </div>
-        <div className="text-xs leading-relaxed text-muted-foreground">{copy}</div>
-      </div>
-    </li>
   );
 }
 

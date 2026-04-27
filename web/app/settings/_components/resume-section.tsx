@@ -90,11 +90,11 @@ export function ResumeSection({
           onDragOver={(e) => e.preventDefault()}
           onDrop={onDrop}
           className={cn(
-            "group/drop relative flex flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed bg-muted/30 px-6 py-10 text-center transition-all",
-            "cursor-pointer",
+            "group/drop relative flex flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed surface-sunken px-6 py-12 text-center cursor-pointer",
+            "transition-[background-color,border-color,transform] duration-200 ease-out",
             dragOver
-              ? "border-foreground/40 bg-foreground/[0.04] scale-[1.005]"
-              : "border-foreground/15 hover:border-foreground/25 hover:bg-muted/50",
+              ? "border-apricot/40 scale-[1.005]"
+              : "border-foreground/15 hover:border-apricot/25",
             uploading && "pointer-events-none opacity-80",
           )}
         >
@@ -111,7 +111,7 @@ export function ResumeSection({
           />
           <span
             className={cn(
-              "flex size-11 items-center justify-center rounded-xl border border-foreground/10 bg-background shadow-xs transition-transform",
+              "flex size-12 items-center justify-center rounded-2xl surface transition-transform duration-200 ease-out",
               !uploading && "group-hover/drop:-translate-y-0.5",
             )}
           >
@@ -122,17 +122,17 @@ export function ResumeSection({
             )}
           </span>
           <div>
-            <div className="text-sm font-medium text-foreground">
+            <div className="font-display text-[15px] font-medium text-foreground">
               {uploading ? progressLabel : hasResume ? "Replace resume" : "Drop your resume PDF"}
             </div>
-            <div className="mt-0.5 text-xs text-muted-foreground">
+            <div className="mt-1 text-xs text-muted-foreground">
               {uploading ? "Don't refresh — extraction & parse in flight" : "or click to browse — max 5 MB, PDF only"}
             </div>
           </div>
         </label>
 
         {error && (
-          <div className="mt-4 flex items-start gap-2 rounded-lg border border-destructive/30 bg-destructive/5 px-3 py-2.5 text-sm text-destructive">
+          <div className="mt-4 flex items-start gap-2 rounded-2xl border border-destructive/30 bg-destructive/8 px-3.5 py-3 text-sm text-destructive">
             <AlertCircle className="size-4 mt-0.5 shrink-0" strokeWidth={1.75} />
             <span>{error}</span>
           </div>
@@ -140,7 +140,7 @@ export function ResumeSection({
 
         {/* Parsed preview */}
         {resumeParsed && (
-          <div className="mt-8 grid grid-cols-1 gap-6 border-t border-foreground/5 pt-7 lg:grid-cols-[1fr_240px]">
+          <div className="mt-8 grid grid-cols-1 gap-6 border-t divider-warm pt-7 lg:grid-cols-[1fr_240px]">
             <div className="min-w-0 space-y-5">
               <div>
                 <div className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground">
@@ -162,7 +162,7 @@ export function ResumeSection({
                   {resumeParsed.skills.map((s) => (
                     <span
                       key={s}
-                      className="inline-flex items-center rounded-md border border-foreground/10 bg-background px-2 py-0.5 text-xs font-medium text-foreground/80"
+                      className="inline-flex items-center rounded-full surface-sunken px-2.5 py-0.5 text-xs font-medium text-foreground/80"
                     >
                       {s}
                     </span>
@@ -181,7 +181,7 @@ export function ResumeSection({
                   {resumeParsed.titles.map((t) => (
                     <span
                       key={t}
-                      className="inline-flex items-center rounded-md border border-foreground/10 bg-background px-2 py-0.5 text-xs font-medium text-foreground/80"
+                      className="inline-flex items-center rounded-full surface-sunken px-2.5 py-0.5 text-xs font-medium text-foreground/80"
                     >
                       {t}
                     </span>
@@ -194,18 +194,18 @@ export function ResumeSection({
             </div>
 
             {/* Side stat */}
-            <aside className="flex flex-col gap-3 lg:border-l lg:border-foreground/5 lg:pl-6">
-              <div className="rounded-xl border border-foreground/10 bg-background p-5">
-                <div className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground">
+            <aside className="flex flex-col gap-3 lg:border-l lg:divider-warm lg:pl-6">
+              <div className="rounded-2xl surface p-5">
+                <div className="font-mono text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
                   Experience
                 </div>
                 <div className="mt-2 flex items-baseline gap-1.5">
-                  <span className="font-mono text-4xl font-medium tabular-nums tracking-tight text-foreground">
+                  <span className="font-display text-4xl font-medium tabular-nums tracking-tight text-foreground">
                     {resumeParsed.yearsExperience}
                   </span>
                   <span className="text-sm text-muted-foreground">yrs</span>
                 </div>
-                <div className="mt-3 flex items-center gap-1.5 text-xs text-emerald-700 dark:text-emerald-400">
+                <div className="mt-3 flex items-center gap-1.5 text-xs text-sage">
                   <Check className="size-3" strokeWidth={2.5} />
                   Profile active
                 </div>
@@ -213,7 +213,7 @@ export function ResumeSection({
               <button
                 type="button"
                 onClick={() => inputRef.current?.click()}
-                className="flex items-center justify-center gap-2 rounded-lg border border-foreground/10 bg-background px-3 py-2.5 text-xs font-medium text-foreground/80 transition-colors hover:border-foreground/20 hover:text-foreground active:translate-y-px"
+                className="press-feedback flex items-center justify-center gap-2 rounded-full surface-sunken px-3 py-2.5 text-xs font-medium text-foreground/80 transition-colors hover:text-foreground"
               >
                 <RotateCcw className="size-3.5" strokeWidth={1.75} />
                 Re-parse with current provider

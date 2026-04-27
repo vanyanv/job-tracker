@@ -37,10 +37,15 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   }
 
   let resumeText: string;
+  const t0 = Date.now();
   try {
+    console.log(`[api/resume] start: file=${file.name} size=${file.size} type=${file.type}`);
     const buffer = await file.arrayBuffer();
+    console.log(`[api/resume] arrayBuffer done in ${Date.now() - t0}ms`);
     const pdf = await getDocumentProxy(new Uint8Array(buffer));
+    console.log(`[api/resume] getDocumentProxy done in ${Date.now() - t0}ms`);
     const { text } = await extractText(pdf, { mergePages: true });
+    console.log(`[api/resume] extractText done in ${Date.now() - t0}ms (${(text as string).length} chars)`);
     await pdf.destroy();
     resumeText = text as string;
   } catch (err) {
@@ -65,13 +70,21 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
 
   const provider = getProvider(user);
 
+  const t1 = Date.now();
   let parsed;
   try {
-    parsed = await provider.parseResume(resumeText);
+    console.log(`[api/resume] calling parseResume (provider=${user.aiProvider ?? "rules"})...`);
+    parsed = await Promise.race([
+      provider.parseResume(resumeText),
+      new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error("AI parseResume timed out after 45s")), 45_000),
+      ),
+    ]);
+    console.log(`[api/resume] parseResume done in ${Date.now() - t1}ms`);
   } catch (err) {
     console.error("[api/resume] parseResume error:", err);
     return NextResponse.json(
-      { error: "Failed to parse resume content. Check your AI provider settings or switch to 'rules'." },
+      { error: `Failed to parse resume content: ${err instanceof Error ? err.message : String(err)}. Try switching AI provider to 'rules' in Settings.` },
       { status: 500 }
     );
   }

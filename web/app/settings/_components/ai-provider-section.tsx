@@ -19,6 +19,7 @@ type ProviderMeta = {
   cost: string;
   needsKey: boolean;
   keyHint: string;
+  recommended?: boolean;
 };
 
 const PROVIDERS: ProviderMeta[] = [
@@ -30,6 +31,7 @@ const PROVIDERS: ProviderMeta[] = [
     cost: "Free",
     needsKey: true,
     keyHint: "gsk_...",
+    recommended: true,
   },
   {
     id: "gemini",
@@ -142,67 +144,74 @@ export function AiProviderSection({
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           {PROVIDERS.map((p) => {
             const isActive = selected === p.id;
+            const isCurrent = p.id === provider;
+
             return (
               <button
                 key={p.id}
                 type="button"
                 onClick={() => setSelected(p.id)}
                 className={cn(
-                  "group relative flex flex-col gap-3 rounded-xl border bg-background p-4 text-left transition-all",
-                  "active:translate-y-px",
+                  "press-feedback group relative flex flex-col gap-3 rounded-2xl p-4 text-left",
+                  "transition-[background-color,box-shadow] duration-200 ease-out",
+                  p.id === "groq" && "sm:col-span-2",
+                  p.id === "rules" && "sm:col-span-2",
                   isActive
-                    ? "border-foreground/30 ring-1 ring-foreground/15 shadow-[inset_0_1px_0_rgba(255,255,255,0.5)]"
-                    : "border-foreground/10 hover:border-foreground/20",
+                    ? "surface shadow-[inset_0_0_0_1px_oklch(0.68_0.22_260/30%),0_2px_18px_-6px_oklch(0.68_0.22_260/20%)]"
+                    : "surface-sunken hover:brightness-110",
                 )}
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
                     <div className="flex items-center gap-2">
-                      <span className="text-[15px] font-medium tracking-tight text-foreground">
+                      <span className="font-display text-[15px] font-medium tracking-tight text-foreground">
                         {p.name}
                       </span>
-                      {p.id === provider && (
+                      {isCurrent && (
                         <Badge tone="active" className="lowercase tracking-normal">
                           current
                         </Badge>
+                      )}
+                      {p.recommended && !isCurrent && (
+                        <span className="rounded-full bg-apricot/12 px-2 py-0.5 font-mono text-[10px] uppercase tracking-[0.12em] text-apricot">
+                          Recommended
+                        </span>
                       )}
                     </div>
                     <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
                       {p.tagline}
                     </p>
                   </div>
-                  <span
-                    className={cn(
-                      "mt-0.5 flex size-4 shrink-0 items-center justify-center rounded-full border transition-all",
-                      isActive
-                        ? "border-foreground bg-foreground text-background"
-                        : "border-foreground/25",
-                    )}
-                  >
-                    {isActive && <Check className="size-2.5" strokeWidth={3} />}
-                  </span>
                 </div>
-                <div className="flex items-center gap-3 border-t border-foreground/5 pt-3">
-                  <span className="font-mono text-[11px] tabular-nums text-muted-foreground">
+                <div className="mt-auto flex flex-wrap items-center gap-1.5 pt-2">
+                  <span className="rounded-full surface-sunken px-2 py-0.5 font-mono text-[10px] uppercase tracking-[0.12em] text-muted-foreground">
                     {p.ratePerDay}
                   </span>
-                  <span className="size-1 rounded-full bg-foreground/15" />
-                  <span className="text-[11px] uppercase tracking-wider text-muted-foreground">
+                  <span className={cn(
+                    "rounded-full px-2 py-0.5 font-mono text-[10px] uppercase tracking-[0.12em]",
+                    p.cost === "Free"
+                      ? "bg-sage/12 text-sage"
+                      : "bg-rose-warm/12 text-rose-warm",
+                  )}>
                     {p.cost}
                   </span>
                 </div>
+
+                {isActive && (
+                  <span className="absolute left-0 inset-y-3 w-0.75 rounded-r-full bg-apricot" />
+                )}
               </button>
             );
           })}
         </div>
 
         {meta.needsKey && (
-          <div className="mt-7 grid grid-cols-1 gap-2 border-t border-foreground/5 pt-7">
+          <div className="mt-7 grid grid-cols-1 gap-2 border-t divider-warm pt-7">
             <div className="flex items-center justify-between">
               <Label htmlFor="api-key">
                 {meta.name} API key
                 {hasKey && selected === provider && (
-                  <span className="ml-2 font-mono text-[10px] font-normal uppercase tracking-wider text-emerald-700 dark:text-emerald-400">
+                  <span className="ml-2 font-mono text-[10px] font-normal uppercase tracking-wider text-sage">
                     · stored
                   </span>
                 )}
@@ -232,7 +241,7 @@ export function AiProviderSection({
         )}
 
         {selected === "rules" && (
-          <div className="mt-7 flex items-start gap-3 rounded-xl border border-foreground/5 bg-muted/40 p-4">
+          <div className="mt-7 flex items-start gap-3 rounded-2xl surface-sunken p-4">
             <div className="mt-0.5 size-1.5 shrink-0 rounded-full bg-foreground/40" />
             <p className="text-xs leading-relaxed text-muted-foreground">
               Rules mode does keyword overlap between job descriptions and your parsed resume.
@@ -241,7 +250,7 @@ export function AiProviderSection({
           </div>
         )}
 
-        <div className="mt-7 flex flex-col-reverse items-stretch gap-3 border-t border-foreground/5 pt-6 sm:flex-row sm:items-center sm:justify-end">
+        <div className="mt-7 flex flex-col-reverse items-stretch gap-3 border-t divider-warm pt-6 sm:flex-row sm:items-center sm:justify-end">
           {error && (
             <div className="flex items-center gap-2 text-sm text-destructive sm:mr-auto">
               <AlertCircle className="size-4" strokeWidth={1.75} />
@@ -249,7 +258,7 @@ export function AiProviderSection({
             </div>
           )}
           {savedAt && !error && (
-            <div className="flex items-center gap-2 text-sm text-emerald-700 dark:text-emerald-400 sm:mr-auto">
+            <div className="flex items-center gap-2 text-sm text-sage sm:mr-auto">
               <Check className="size-4" strokeWidth={2} />
               Saved
             </div>

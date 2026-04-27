@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { DashboardShell } from "./_components/dashboard-shell";
+import type { FeedItem } from "./_components/job-feed";
 
 export const dynamic = "force-dynamic";
 
@@ -77,7 +78,27 @@ export default async function DashboardPage() {
           user.aiProvider === "rules" || (!!user.aiProvider && !!user.aiApiKey),
       }}
       countsByStatus={countsByStatus}
-      initialItems={JSON.parse(JSON.stringify(initialItems))}
+      initialItems={initialItems.map(
+        (it): FeedItem => ({
+          id: it.id,
+          score: it.score,
+          scoreReason: it.scoreReason,
+          status: it.status,
+          appliedAt: it.appliedAt ? it.appliedAt.toISOString() : null,
+          emailNote: it.emailNote,
+          job: {
+            id: it.job.id,
+            title: it.job.title,
+            company: it.job.company,
+            location: it.job.location,
+            url: it.job.url,
+            source: it.job.source,
+            postedAt: it.job.postedAt.toISOString(),
+            foundAt: it.job.foundAt.toISOString(),
+            snapshotUrl: it.job.snapshotUrl,
+          },
+        }),
+      )}
     />
   );
 }

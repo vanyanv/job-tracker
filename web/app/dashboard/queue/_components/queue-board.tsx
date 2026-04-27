@@ -8,12 +8,14 @@ import {
   CheckCircle2,
   XCircle,
   Loader2,
-  Calendar,
   Keyboard,
   PlayCircle,
   Layers,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { ScoreRing } from "@/app/_components/score-ring";
+import { Topbar } from "@/app/_components/topbar";
+import { WarmGlow } from "@/app/_components/warm-glow";
 import { cn } from "@/lib/utils";
 
 type QueueItem = {
@@ -57,6 +59,7 @@ export function QueueBoard({
 
   const remaining = items.length;
   const cursorItem = items[cursor];
+  const totalForProgress = remaining + sessionApplied;
 
   React.useEffect(() => {
     if (cursor >= items.length) setCursor(Math.max(0, items.length - 1));
@@ -81,7 +84,7 @@ export function QueueBoard({
       setItems((prev) => prev.filter((it) => it.id !== id));
       if (next === "applied") setSessionApplied((n) => n + 1);
     } catch {
-      // could surface toast later
+      // swallow
     } finally {
       setPending((p) => {
         const copy = { ...p };
@@ -104,16 +107,20 @@ export function QueueBoard({
     const slice = items.slice(0, batchSize);
     if (slice.length === 0) return;
     slice.forEach((it, i) => {
-      // Stagger so popup blockers don't bundle them
       setTimeout(() => openItem(it), i * 110);
     });
   }
 
-  // Keyboard shortcuts
   React.useEffect(() => {
     function onKey(e: KeyboardEvent) {
       const target = e.target as HTMLElement | null;
-      if (target && (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.isContentEditable)) return;
+      if (
+        target &&
+        (target.tagName === "INPUT" ||
+          target.tagName === "TEXTAREA" ||
+          target.isContentEditable)
+      )
+        return;
       if (e.metaKey || e.ctrlKey || e.altKey) return;
 
       const item = items[cursor];
@@ -160,67 +167,82 @@ export function QueueBoard({
   }, [items, cursor]);
 
   return (
-    <div className="min-h-[100dvh] bg-background text-foreground antialiased">
-      <Topbar />
+    <div className="relative min-h-dvh bg-background text-foreground">
+      <Topbar user={user} active="queue" />
 
-      <div className="mx-auto max-w-[1100px] px-4 py-8 md:px-8 md:py-12">
+      <div className="relative mx-auto max-w-[1200px] px-4 pt-10 pb-16 md:px-8 md:pt-14 md:pb-24">
+        <WarmGlow position="top-right" size="lg" hue="apricot" />
+
         <div className="grid grid-cols-1 gap-10 lg:grid-cols-[1fr_280px] lg:gap-14">
-          {/* Main column */}
           <main className="min-w-0">
-            {/* Header */}
-            <header className="flex flex-col gap-3 border-b border-foreground/5 pb-6">
+            {/* Hero */}
+            <header className="mb-9">
               <Link
                 href="/dashboard"
-                className="inline-flex w-fit items-center gap-1.5 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground"
+                className="inline-flex w-fit items-center gap-1.5 text-[12px] font-medium text-muted-foreground transition-colors hover:text-foreground"
               >
                 <ArrowLeft className="size-3.5" strokeWidth={2} />
                 Pipeline
               </Link>
-              <div className="flex flex-wrap items-end justify-between gap-4">
-                <div>
-                  <div className="font-mono text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
-                    Apply session
+              <div className="mt-5 font-mono text-[10px] uppercase tracking-[0.22em] text-muted-foreground">
+                Apply session
+              </div>
+              <h1 className="hearth-enter mt-3 font-display text-[44px] leading-[1.04] tracking-tight md:text-[56px]">
+                Queue.
+              </h1>
+              <p className="mt-4 max-w-[54ch] text-[14px] leading-relaxed text-muted-foreground">
+                Power through queued roles. Open in tabs, fill via Simplify, and
+                the extension will mark each as applied when you submit.
+              </p>
+
+              {/* Progress + stats */}
+              <div className="mt-7 grid grid-cols-3 gap-3 md:max-w-[480px]">
+                <SessionStat label="Remaining" value={remaining} />
+                <SessionStat label="Today" value={appliedToday + sessionApplied} tone="apricot" />
+                <SessionStat label="Opened" value={opened.size} />
+              </div>
+
+              {totalForProgress > 0 && (
+                <div className="mt-5 max-w-[480px]">
+                  <div className="h-1.5 overflow-hidden rounded-full bg-foreground/8">
+                    <div
+                      className="h-full bg-apricot transition-[width] duration-500 ease-out"
+                      style={{
+                        width: `${
+                          (sessionApplied / Math.max(1, totalForProgress)) * 100
+                        }%`,
+                      }}
+                    />
                   </div>
-                  <h1 className="mt-2 text-3xl font-medium tracking-tighter md:text-4xl">
-                    Queue
-                  </h1>
-                  <p className="mt-2 max-w-[44ch] text-sm leading-relaxed text-muted-foreground">
-                    Power through queued roles. Open in tabs, fill via Simplify, and the extension
-                    will mark each as applied when you submit.
+                  <p className="mt-2 font-mono text-[10.5px] uppercase tracking-[0.16em] text-muted-foreground">
+                    {sessionApplied} of {totalForProgress} this session
                   </p>
                 </div>
-                <div className="flex items-center gap-3 font-mono text-xs tabular-nums text-muted-foreground">
-                  <Stat label="Remaining" value={remaining} />
-                  <Divider />
-                  <Stat label="Today" value={appliedToday + sessionApplied} accent />
-                  <Divider />
-                  <Stat label="Opened" value={opened.size} />
-                </div>
-              </div>
+              )}
             </header>
 
             {/* Action bar */}
-            <div className="sticky top-14 z-20 -mx-4 flex flex-wrap items-center gap-3 border-b border-foreground/5 bg-background/85 px-4 py-3 backdrop-blur-md md:-mx-8 md:px-8">
+            <div className="sticky top-16 z-20 -mx-4 mb-4 flex flex-wrap items-center gap-3 surface-elevated border-b divider-warm px-4 py-3 md:-mx-8 md:px-8">
               <button
                 type="button"
                 onClick={openBatch}
                 disabled={remaining === 0}
-                className="inline-flex h-9 items-center gap-2 rounded-lg border border-emerald-700/15 bg-emerald-500/10 px-3.5 text-sm font-medium text-emerald-700 transition-all hover:bg-emerald-500/15 active:translate-y-px disabled:pointer-events-none disabled:opacity-50 dark:text-emerald-400"
+                className="press-feedback inline-flex h-9 items-center gap-2 rounded-full bg-apricot px-4 text-sm font-medium text-apricot-foreground shadow-[inset_0_1px_0_oklch(1_0_0/24%),0_4px_18px_-6px_oklch(0.78_0.13_55/45%)] disabled:pointer-events-none disabled:opacity-50"
               >
                 <PlayCircle className="size-4" strokeWidth={1.75} />
                 Open next {batchSize}
               </button>
 
-              <div className="inline-flex items-center gap-0 rounded-lg border border-foreground/10 bg-foreground/[0.015] p-0.5">
+              <div className="inline-flex items-center gap-0.5 rounded-full surface-sunken p-1">
                 {[3, 5, 10].map((n) => (
                   <button
                     key={n}
                     type="button"
                     onClick={() => setBatchSize(n)}
                     className={cn(
-                      "rounded-md px-2.5 py-1 font-mono text-[11px] tabular-nums transition-all",
+                      "rounded-full px-3 py-1 font-mono text-[11px] tabular-nums transition-colors duration-150",
                       batchSize === n
-                        ? "bg-background text-foreground shadow-[inset_0_0_0_1px_rgba(0,0,0,0.06)]"
+                        ? "bg-card text-foreground shadow-[inset_0_1px_0_oklch(1_0_0/8%)]"
                         : "text-muted-foreground hover:text-foreground",
                     )}
                   >
@@ -231,11 +253,8 @@ export function QueueBoard({
 
               <ShortcutHint />
 
-              <div className="ml-auto text-[11px] text-muted-foreground">
-                Cursor on{" "}
-                <span className="font-mono tabular-nums text-foreground">
-                  {remaining === 0 ? "—" : `${cursor + 1}/${remaining}`}
-                </span>
+              <div className="ml-auto font-mono text-[11px] tabular-nums text-muted-foreground">
+                {remaining === 0 ? "—" : `${cursor + 1}/${remaining}`}
               </div>
             </div>
 
@@ -243,7 +262,7 @@ export function QueueBoard({
             {remaining === 0 ? (
               <EmptyState />
             ) : (
-              <ul className="divide-y divide-foreground/5">
+              <ul className="flex flex-col gap-2">
                 {items.map((item, idx) => {
                   const isCursor = idx === cursor;
                   const wasOpened = opened.has(item.id);
@@ -256,16 +275,13 @@ export function QueueBoard({
                       }}
                       onMouseEnter={() => setCursor(idx)}
                       className={cn(
-                        "group/r relative flex items-start gap-4 px-4 py-5 transition-all",
-                        "hover:bg-foreground/[0.012]",
-                        isCursor && "bg-foreground/[0.025]",
+                        "group/r relative flex items-start gap-4 rounded-2xl px-4 py-4 transition-[background-color,box-shadow] duration-200 ease-out md:px-5",
+                        isCursor
+                          ? "surface shadow-[inset_0_0_0_1px_oklch(0.78_0.13_55/22%),0_2px_24px_-8px_oklch(0.78_0.13_55/30%)]"
+                          : "bg-foreground/[0.012] hover:bg-foreground/[0.025]",
                       )}
                     >
-                      {isCursor && (
-                        <span className="absolute left-0 top-0 h-full w-[2px] bg-foreground transition-all" />
-                      )}
-
-                      <ScoreBadge score={item.score ?? 0} />
+                      <ScoreRing score={item.score ?? 0} size="md" className="mt-0.5" />
 
                       <div className="min-w-0 flex-1">
                         <div className="flex flex-wrap items-baseline gap-x-2.5 gap-y-1">
@@ -280,24 +296,25 @@ export function QueueBoard({
                                 return next;
                               });
                             }}
-                            className="text-[15px] font-medium leading-snug tracking-tight text-foreground transition-colors hover:text-foreground/70"
+                            className="font-display text-[16px] font-medium leading-snug tracking-tight text-foreground transition-colors duration-200 hover:text-foreground/75"
                           >
                             {item.job.title}
                           </a>
                           <span className="text-muted-foreground/40">·</span>
-                          <span className="text-sm text-muted-foreground">{item.job.company}</span>
+                          <span className="text-[13.5px] text-muted-foreground">
+                            {item.job.company}
+                          </span>
                           {wasOpened && <Badge tone="active">Opened</Badge>}
                         </div>
-                        <div className="mt-1.5 flex flex-wrap items-center gap-x-4 gap-y-1 font-mono text-[11px] uppercase tracking-wide text-muted-foreground/80">
+                        <div className="mt-1.5 flex flex-wrap items-center gap-x-3.5 gap-y-1 font-mono text-[10.5px] uppercase tracking-[0.04em] text-muted-foreground/85">
                           <span>{item.job.location || "—"}</span>
-                          <span className="flex items-center gap-1">
-                            <Calendar className="size-3" strokeWidth={1.75} />
-                            {relTime(item.job.postedAt)}
-                          </span>
+                          <Dot />
+                          <span>{relTime(item.job.postedAt)}</span>
+                          <Dot />
                           <span>{SOURCE_LABEL[item.job.source] ?? item.job.source}</span>
                         </div>
                         {item.scoreReason && (
-                          <p className="mt-2 max-w-[64ch] text-xs leading-relaxed text-muted-foreground/85">
+                          <p className="mt-2.5 max-w-[64ch] text-[12.5px] leading-relaxed text-muted-foreground/85">
                             {item.scoreReason}
                           </p>
                         )}
@@ -315,7 +332,7 @@ export function QueueBoard({
                           icon={CheckCircle2}
                           label="Applied"
                           shortcut="A"
-                          tone="emerald"
+                          tone="apricot"
                           pending={isPending === "applied"}
                         />
                         <RowAction
@@ -336,11 +353,11 @@ export function QueueBoard({
 
           {/* Right rail */}
           <aside className="lg:sticky lg:top-24 lg:self-start">
-            <div className="rounded-2xl border border-foreground/8 bg-foreground/[0.015] p-5">
-              <div className="font-mono text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
+            <div className="rounded-2xl surface px-5 py-5">
+              <div className="font-mono text-[10px] uppercase tracking-[0.22em] text-muted-foreground">
                 Flow
               </div>
-              <ol className="mt-4 space-y-3 text-sm leading-relaxed">
+              <ol className="mt-4 space-y-3.5 text-sm leading-relaxed">
                 <Step n={1} label="Open in batch" detail="Stagger up to 10 tabs at once." />
                 <Step n={2} label="Apply via Simplify" detail="Auto-fill in each ATS form." />
                 <Step
@@ -356,14 +373,14 @@ export function QueueBoard({
               </ol>
             </div>
 
-            <div className="mt-6 rounded-2xl border border-dashed border-foreground/15 bg-transparent p-5">
-              <div className="flex items-center gap-2">
-                <span className="flex size-7 items-center justify-center rounded-md border border-foreground/10 bg-background">
-                  <Layers className="size-3.5 text-foreground/70" strokeWidth={1.75} />
+            <div className="mt-5 rounded-2xl border border-dashed border-foreground/12 px-5 py-4">
+              <div className="flex items-center gap-2.5">
+                <span className="flex size-9 items-center justify-center rounded-xl surface-sunken">
+                  <Layers className="size-4 text-foreground/70" strokeWidth={1.75} />
                 </span>
                 <div>
-                  <div className="text-sm font-medium leading-none">Session</div>
-                  <div className="mt-1 text-[11px] text-muted-foreground">
+                  <div className="text-[13px] font-medium leading-none">Session</div>
+                  <div className="mt-1.5 font-mono text-[11px] uppercase tracking-wide text-muted-foreground">
                     {sessionApplied} applied · {opened.size} opened
                   </div>
                 </div>
@@ -376,77 +393,34 @@ export function QueueBoard({
   );
 }
 
-function Topbar() {
+function Dot() {
   return (
-    <header className="sticky top-0 z-30 border-b border-foreground/5 bg-background/85 backdrop-blur-md">
-      <div className="mx-auto flex h-14 max-w-[1400px] items-center justify-between gap-6 px-4 md:px-8">
-        <Link href="/dashboard" className="text-sm font-medium tracking-tight">
-          Job Tracker
-        </Link>
-        <nav className="flex items-center gap-1">
-          <Link
-            href="/dashboard"
-            className="rounded-md px-3 py-1.5 text-sm text-muted-foreground transition-all hover:bg-foreground/[0.04] hover:text-foreground"
-          >
-            Pipeline
-          </Link>
-          <span className="rounded-md bg-foreground/[0.05] px-3 py-1.5 text-sm text-foreground">
-            Queue
-          </span>
-          <Link
-            href="/settings"
-            className="rounded-md px-3 py-1.5 text-sm text-muted-foreground transition-all hover:bg-foreground/[0.04] hover:text-foreground"
-          >
-            Settings
-          </Link>
-        </nav>
-      </div>
-    </header>
+    <span className="size-0.5 rounded-full bg-muted-foreground/30" aria-hidden />
   );
 }
 
-function Stat({ label, value, accent }: { label: string; value: number; accent?: boolean }) {
+function SessionStat({
+  label,
+  value,
+  tone,
+}: {
+  label: string;
+  value: number;
+  tone?: "apricot";
+}) {
   return (
-    <div className="flex flex-col items-end leading-none">
-      <span
+    <div className="rounded-2xl surface px-3.5 py-3">
+      <div className="font-mono text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
+        {label}
+      </div>
+      <div
         className={cn(
-          "text-lg font-semibold tracking-tight",
-          accent ? "text-emerald-700 dark:text-emerald-400" : "text-foreground",
+          "mt-1 font-display text-2xl leading-none tracking-tight tabular-nums",
+          tone === "apricot" ? "text-apricot" : "text-foreground",
         )}
       >
         {value}
-      </span>
-      <span className="mt-1 text-[10px] uppercase tracking-[0.16em] text-muted-foreground/70">
-        {label}
-      </span>
-    </div>
-  );
-}
-
-function Divider() {
-  return <span className="h-7 w-px bg-foreground/10" />;
-}
-
-function ScoreBadge({ score }: { score: number }) {
-  const tone =
-    score >= 80
-      ? "border-emerald-700/25 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400"
-      : score >= 60
-        ? "border-foreground/15 bg-foreground/[0.04] text-foreground"
-        : score > 0
-          ? "border-foreground/8 bg-foreground/[0.02] text-muted-foreground"
-          : "border-dashed border-foreground/10 bg-transparent text-muted-foreground/60";
-  return (
-    <div
-      className={cn(
-        "flex size-12 shrink-0 flex-col items-center justify-center rounded-xl border font-mono leading-none tabular-nums transition-colors",
-        tone,
-      )}
-    >
-      <span className="text-base font-semibold tracking-tight">{score || "—"}</span>
-      <span className="mt-0.5 text-[8px] uppercase tracking-[0.16em] text-muted-foreground/70">
-        score
-      </span>
+      </div>
     </div>
   );
 }
@@ -464,7 +438,7 @@ function RowAction({
   icon: React.ComponentType<{ className?: string; strokeWidth?: number }>;
   label: string;
   shortcut: string;
-  tone?: "emerald";
+  tone?: "apricot";
   ghost?: boolean;
   pending?: boolean;
 }) {
@@ -474,21 +448,21 @@ function RowAction({
       onClick={onClick}
       disabled={pending}
       className={cn(
-        "group/a relative inline-flex h-8 items-center gap-1.5 rounded-md px-2.5 text-xs transition-all active:translate-y-px disabled:pointer-events-none disabled:opacity-50",
+        "press-feedback inline-flex h-8 items-center gap-1.5 rounded-full px-3 text-[12px] font-medium transition-[background-color,color] duration-200 ease-out disabled:pointer-events-none disabled:opacity-50",
         ghost
-          ? "text-muted-foreground hover:bg-foreground/[0.05] hover:text-foreground"
-          : tone === "emerald"
-            ? "border border-emerald-700/15 bg-emerald-500/[0.06] text-emerald-700 hover:bg-emerald-500/10 dark:text-emerald-400"
-            : "border border-foreground/10 bg-foreground/[0.02] text-foreground hover:bg-foreground/[0.06]",
+          ? "text-muted-foreground hover:bg-foreground/6 hover:text-foreground"
+          : tone === "apricot"
+            ? "bg-apricot/12 text-apricot shadow-[inset_0_0_0_1px_oklch(0.78_0.13_55/22%)] hover:bg-apricot/18"
+            : "surface-sunken text-foreground hover:brightness-110",
       )}
     >
       {pending ? (
         <Loader2 className="size-3 animate-spin" strokeWidth={2} />
       ) : (
-        <Icon className="size-3" strokeWidth={1.75} />
+        <Icon className="size-3.5" strokeWidth={1.75} />
       )}
       <span className="hidden sm:inline">{label}</span>
-      <kbd className="ml-1 hidden rounded bg-foreground/[0.06] px-1 py-px font-mono text-[9px] uppercase tracking-wider text-muted-foreground sm:inline">
+      <kbd className="ml-1 hidden rounded-md bg-foreground/8 px-1 py-px font-mono text-[9px] uppercase tracking-wider text-muted-foreground sm:inline">
         {shortcut}
       </kbd>
     </button>
@@ -497,7 +471,7 @@ function RowAction({
 
 function ShortcutHint() {
   return (
-    <div className="hidden items-center gap-2 rounded-lg border border-foreground/8 bg-foreground/[0.015] px-2.5 py-1.5 text-[11px] text-muted-foreground md:flex">
+    <div className="hidden items-center gap-2 rounded-full surface-sunken px-3 py-1.5 text-[11px] text-muted-foreground md:flex">
       <Keyboard className="size-3" strokeWidth={1.75} />
       <span className="flex items-center gap-1.5">
         <Key>J</Key>
@@ -519,7 +493,7 @@ function ShortcutHint() {
 
 function Key({ children }: { children: React.ReactNode }) {
   return (
-    <kbd className="rounded bg-background px-1 py-px font-mono text-[10px] uppercase tracking-wider text-foreground shadow-[inset_0_0_0_1px_rgba(0,0,0,0.07)]">
+    <kbd className="rounded-md bg-card px-1.5 py-px font-mono text-[10px] uppercase tracking-wider text-foreground shadow-[inset_0_1px_0_oklch(1_0_0/8%)]">
       {children}
     </kbd>
   );
@@ -528,12 +502,14 @@ function Key({ children }: { children: React.ReactNode }) {
 function Step({ n, label, detail }: { n: number; label: string; detail: string }) {
   return (
     <li className="flex items-start gap-3">
-      <span className="mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-md border border-foreground/10 bg-background font-mono text-[10px] tabular-nums text-muted-foreground">
+      <span className="mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-lg bg-apricot/10 font-mono text-[10px] font-medium tabular-nums text-apricot">
         {n}
       </span>
       <div className="min-w-0">
         <div className="text-[13px] font-medium leading-tight">{label}</div>
-        <p className="mt-0.5 text-[11px] leading-relaxed text-muted-foreground">{detail}</p>
+        <p className="mt-1 text-[11.5px] leading-relaxed text-muted-foreground">
+          {detail}
+        </p>
       </div>
     </li>
   );
@@ -541,17 +517,23 @@ function Step({ n, label, detail }: { n: number; label: string; detail: string }
 
 function EmptyState() {
   return (
-    <div className="mt-10 flex flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-foreground/10 bg-foreground/[0.01] px-6 py-16 text-center">
+    <div className="mt-6 flex flex-col items-center justify-center gap-4 rounded-3xl border border-dashed border-foreground/12 bg-foreground/[0.012] px-6 py-20 text-center">
+      <span className="flex size-12 items-center justify-center rounded-2xl surface-sunken">
+        <PlayCircle
+          className="size-5 text-muted-foreground"
+          strokeWidth={1.5}
+        />
+      </span>
       <div>
-        <div className="text-base font-medium tracking-tight">Queue is empty</div>
-        <p className="mt-2 max-w-[40ch] text-sm leading-relaxed text-muted-foreground">
-          Add jobs to your queue from the pipeline. High-score roles appear here ready for a focused
-          apply session.
+        <div className="font-display text-xl leading-snug">Queue is empty</div>
+        <p className="mx-auto mt-2 max-w-[44ch] text-[13.5px] leading-relaxed text-muted-foreground">
+          Add jobs from the pipeline. High-score roles appear here ready for a
+          focused apply session.
         </p>
       </div>
       <Link
         href="/dashboard"
-        className="mt-3 inline-flex h-8 items-center gap-1.5 rounded-md border border-foreground/10 bg-foreground/[0.02] px-3 text-xs transition-all hover:bg-foreground/[0.06] active:translate-y-px"
+        className="press-feedback mt-2 inline-flex h-9 items-center gap-1.5 rounded-full surface-sunken px-4 text-[13px]"
       >
         Back to pipeline
       </Link>

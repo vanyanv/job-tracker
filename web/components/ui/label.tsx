@@ -6,7 +6,7 @@ function Label({ className, ...props }: React.ComponentProps<"label">) {
     <label
       data-slot="label"
       className={cn(
-        "text-[13px] font-medium leading-none text-foreground",
+        "text-[13px] font-medium leading-none text-foreground tracking-tight",
         "peer-disabled:cursor-not-allowed peer-disabled:opacity-50",
         className,
       )}

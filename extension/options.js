@@ -46,7 +46,6 @@ $("test").addEventListener("click", async () => {
     if (res.status === 401) {
       setStatus("API key rejected", "err");
     } else if (res.status === 404 || res.status === 400) {
-      // Auth passed but URL not in DB — that's the expected happy path.
       setStatus("Connected", "ok");
     } else if (res.ok) {
       setStatus("Connected", "ok");

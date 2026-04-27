@@ -75,13 +75,13 @@ export function GmailSection({
 
       <div className="px-7 py-7 md:px-9">
         {flash === "connected" && (
-          <div className="mb-6 flex items-center gap-2 rounded-lg border border-emerald-600/30 bg-emerald-500/5 px-3 py-2.5 text-sm text-emerald-700 dark:text-emerald-400">
+          <div className="mb-6 flex items-center gap-2 rounded-2xl border border-sage/25 bg-sage/8 px-3.5 py-3 text-sm text-sage">
             <Check className="size-4" strokeWidth={2} />
             Gmail connected — first sync runs within 2 hours.
           </div>
         )}
         {flash === "error" && (
-          <div className="mb-6 flex items-start gap-2 rounded-lg border border-destructive/30 bg-destructive/5 px-3 py-2.5 text-sm text-destructive">
+          <div className="mb-6 flex items-start gap-2 rounded-2xl border border-destructive/30 bg-destructive/8 px-3.5 py-3 text-sm text-destructive">
             <AlertCircle className="size-4 mt-0.5 shrink-0" strokeWidth={1.75} />
             <span>Couldn't connect Gmail{reason ? ` (${reason})` : ""}. Try again.</span>
           </div>
@@ -89,27 +89,29 @@ export function GmailSection({
 
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_280px]">
           {/* Perks list */}
-          <ul className="space-y-1 divide-y divide-foreground/5 border-y border-foreground/5">
+          <ul className="divide-y divider-warm border-y divider-warm">
             {PERKS.map((p) => (
-              <li key={p.label} className="flex items-start gap-3 py-3.5">
-                <span className="mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-md border border-foreground/10 bg-background">
-                  <p.icon className="size-3.5 text-foreground/70" strokeWidth={1.75} />
+              <li key={p.label} className="flex items-start gap-3.5 py-4">
+                <span className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-xl surface-sunken">
+                  <p.icon className="size-3.5 text-foreground/75" strokeWidth={1.75} />
                 </span>
-                <p className="text-sm leading-relaxed text-foreground/80">{p.label}</p>
+                <p className="text-[13.5px] leading-relaxed text-foreground/85">
+                  {p.label}
+                </p>
               </li>
             ))}
           </ul>
 
           {/* Connect card */}
-          <aside className="flex flex-col gap-4 rounded-xl border border-dashed border-foreground/15 bg-muted/30 p-5">
-            <div className="flex size-9 items-center justify-center rounded-lg border border-foreground/10 bg-background">
-              <Mail className="size-4 text-foreground/70" strokeWidth={1.75} />
+          <aside className="flex flex-col gap-4 rounded-2xl border border-dashed border-foreground/15 p-5">
+            <div className="flex size-10 items-center justify-center rounded-xl surface">
+              <Mail className="size-4 text-foreground/75" strokeWidth={1.75} />
             </div>
             <div>
-              <div className="text-sm font-medium text-foreground">
+              <div className="font-display text-[15px] font-medium text-foreground">
                 {connected ? "Sync active" : "Not connected"}
               </div>
-              <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+              <p className="mt-1.5 text-xs leading-relaxed text-muted-foreground">
                 {connected
                   ? "Inbox polled every 2 hours via GitHub Actions."
                   : "Click connect to grant gmail.readonly — only headers and snippets are scanned."}

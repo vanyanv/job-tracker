@@ -62,12 +62,12 @@ export function ApiKeySection({
 
       <div className="px-7 py-7 md:px-9">
         {/* Key display */}
-        <div className="rounded-xl border border-foreground/10 bg-background p-1.5">
+        <div className="rounded-2xl surface-sunken p-1.5">
           <div className="flex items-center gap-2">
             <code
               onClick={() => setReveal((r) => !r)}
               className={cn(
-                "flex-1 min-w-0 cursor-pointer overflow-hidden text-ellipsis whitespace-nowrap rounded-lg bg-muted/50 px-3.5 py-2.5 font-mono text-[13px] tabular-nums text-foreground transition-colors hover:bg-muted",
+                "flex-1 min-w-0 cursor-pointer overflow-hidden text-ellipsis whitespace-nowrap rounded-xl bg-foreground/4 px-3.5 py-2.5 font-mono text-[13px] tabular-nums text-foreground transition-colors duration-150 hover:bg-foreground/6",
                 !reveal && "tracking-wider",
               )}
               title={reveal ? "Click to hide" : "Click to reveal"}
@@ -98,8 +98,8 @@ export function ApiKeySection({
 
         {/* Usage hint */}
         <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2">
-          <div className="rounded-xl border border-foreground/10 bg-background p-4">
-            <div className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground">
+          <div className="rounded-2xl surface-sunken p-4">
+            <div className="font-mono text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
               Where to paste it
             </div>
             <p className="mt-2 text-xs leading-relaxed text-foreground/80">
@@ -107,8 +107,8 @@ export function ApiKeySection({
               You'll see a green dot appear when authenticated.
             </p>
           </div>
-          <div className="rounded-xl border border-foreground/10 bg-background p-4">
-            <div className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground">
+          <div className="rounded-2xl surface-sunken p-4">
+            <div className="font-mono text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
               Header used
             </div>
             <code className="mt-2 block font-mono text-[11px] text-foreground/80">
@@ -118,10 +118,10 @@ export function ApiKeySection({
         </div>
 
         {/* Regenerate */}
-        <div className="mt-7 border-t border-foreground/5 pt-7">
+        <div className="mt-7 border-t divider-warm pt-7">
           <div className="flex items-start justify-between gap-6">
             <div className="min-w-0">
-              <div className="text-sm font-medium text-foreground">Rotate key</div>
+              <div className="font-display text-[15px] font-medium text-foreground">Rotate key</div>
               <p className="mt-1 max-w-[52ch] text-xs leading-relaxed text-muted-foreground">
                 Generates a new key and revokes the old one immediately. You'll need to paste the
                 new key into your Chrome extension before it works again.

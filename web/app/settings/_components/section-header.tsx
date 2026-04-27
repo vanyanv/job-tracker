@@ -17,18 +17,18 @@ export function SectionHeader({
   return (
     <div
       className={cn(
-        "flex items-start justify-between gap-6 border-b border-foreground/10 px-7 py-6 md:px-9 md:py-7",
+        "flex items-start justify-between gap-6 border-b divider-warm px-7 py-7 md:px-9 md:py-8",
         className,
       )}
     >
       <div className="min-w-0">
-        <div className="font-mono text-[11px] uppercase tracking-[0.14em] text-muted-foreground">
+        <div className="font-mono text-[10px] uppercase tracking-[0.22em] text-muted-foreground">
           {eyebrow}
         </div>
-        <h2 className="mt-2 text-xl font-medium tracking-tight text-foreground md:text-2xl">
+        <h2 className="mt-2.5 font-display text-2xl font-medium tracking-tight text-foreground md:text-[28px]">
           {title}
         </h2>
-        <p className="mt-1.5 max-w-[58ch] text-sm leading-relaxed text-muted-foreground">
+        <p className="mt-2 max-w-[58ch] text-[13.5px] leading-relaxed text-muted-foreground">
           {description}
         </p>
       </div>

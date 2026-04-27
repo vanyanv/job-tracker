@@ -1,7 +1,6 @@
 "use client";
 
 import * as React from "react";
-import Link from "next/link";
 import {
   Area,
   AreaChart,
@@ -9,20 +8,9 @@ import {
   BarChart,
   CartesianGrid,
   Cell,
-  Label,
-  Pie,
-  PieChart,
   XAxis,
   YAxis,
 } from "recharts";
-import {
-  Briefcase,
-  Settings as SettingsIcon,
-  TrendingUp,
-  MessageSquare,
-  Calendar,
-  Target,
-} from "lucide-react";
 import {
   Card,
   CardContent,
@@ -36,8 +24,10 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart";
-import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Topbar } from "@/app/_components/topbar";
+import { WarmGlow } from "@/app/_components/warm-glow";
+import { StatTile } from "@/app/_components/stat-tile";
 import { cn } from "@/lib/utils";
 
 type DashboardUser = {
@@ -71,14 +61,10 @@ const SOURCE_LABEL: Record<string, string> = {
   lever: "Lever",
 };
 
-// Emerald single-accent palette — different opacities for proportion charts
-const EMERALD = "oklch(0.696 0.17 162.48)";
-const EMERALD_SOFT = "oklch(0.696 0.17 162.48 / 0.55)";
-const EMERALD_FAINT = "oklch(0.696 0.17 162.48 / 0.28)";
-const NEUTRAL = "oklch(0.55 0 0 / 0.28)";
-
-const CARD_CLS =
-  "rounded-2xl border border-foreground/8 bg-card/40 ring-0 shadow-none gap-0 py-0 overflow-hidden";
+const APRICOT = "oklch(0.68 0.22 260)";
+const APRICOT_SOFT = "oklch(0.68 0.22 260 / 55%)";
+const APRICOT_FAINT = "oklch(0.68 0.22 260 / 28%)";
+const SAGE = "oklch(0.71 0.14 157)";
 
 export function AnalyticsShell({
   user,
@@ -95,75 +81,100 @@ export function AnalyticsShell({
   sources: { source: string; count: number }[];
   topCompanies: { company: string; count: number }[];
 }) {
+  const responsePct = Math.round(metrics.responseRate * 100);
+  const interviewPct = Math.round(metrics.interviewRate * 100);
+
   return (
-    <div className="min-h-[100dvh] bg-background text-foreground antialiased">
-      <Topbar user={user} />
+    <div className="relative min-h-dvh bg-background text-foreground">
+      <Topbar user={user} active="analytics" />
 
-      <div className="mx-auto max-w-[1400px] px-4 py-8 md:px-8 md:py-12">
-        <div className="grid grid-cols-1 gap-8 lg:grid-cols-[280px_1fr] lg:gap-12">
-          <aside className="lg:sticky lg:top-24 lg:self-start">
-            <div className="font-mono text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
-              Insight
+      <div className="relative mx-auto max-w-[1400px] px-4 pt-10 pb-16 md:px-8 md:pt-14 md:pb-24">
+        {/* Hero — editorial KPI */}
+        <section className="relative mb-12 md:mb-16">
+          <WarmGlow position="top-right" size="xl" hue="apricot" />
+          <WarmGlow position="top-left" size="md" hue="sage" className="opacity-50" />
+
+          <div className="font-mono text-[10px] uppercase tracking-[0.22em] text-muted-foreground">
+            Performance · last 90 days
+          </div>
+
+          <div className="mt-6 grid grid-cols-1 items-end gap-10 md:grid-cols-[1.1fr_1fr]">
+            <div>
+              <h1 className="hearth-enter font-display text-[80px] leading-[0.95] tracking-tight tabular-nums md:text-[120px]">
+                <span className={cn(responsePct > 0 ? "text-apricot" : "text-foreground/70")}>
+                  {responsePct}
+                </span>
+                <span className="text-foreground/40">%</span>
+              </h1>
+              <p className="mt-4 max-w-[36ch] text-[14px] leading-relaxed text-muted-foreground">
+                <span className="text-foreground">Response rate.</span>{" "}
+                {metrics.submitted === 0
+                  ? "Apply to a few jobs to start seeing your conversion data here."
+                  : `${metrics.totalInterview + metrics.totalRejected} replies across ${metrics.submitted} application${metrics.submitted === 1 ? "" : "s"}.`}
+              </p>
             </div>
-            <h1 className="mt-2 text-3xl font-medium tracking-tighter md:text-4xl">
-              Performance.
-            </h1>
-            <p className="mt-2 max-w-[28ch] text-sm leading-relaxed text-muted-foreground">
-              {metrics.submitted === 0
-                ? "Apply to a few jobs to start seeing your conversion data here."
-                : `${metrics.submitted} applications tracked across the pipeline.`}
-            </p>
 
-            <Separator className="my-6 bg-foreground/5" />
-
-            <div className="space-y-5">
-              <KeyStat
+            {/* KPI tiles */}
+            <div className="grid grid-cols-2 gap-3">
+              <StatTile
                 label="Last 7 days"
                 value={metrics.last7}
-                hint={metrics.last7 === 1 ? "application" : "applications"}
-                icon={Calendar}
+                tone={metrics.last7 > 0 ? "apricot" : "default"}
+                caption={metrics.last7 === 1 ? "application" : "applications"}
+                display
+                delay={0}
               />
-              <KeyStat
-                label="Response rate"
-                value={`${Math.round(metrics.responseRate * 100)}%`}
-                hint={`${metrics.totalInterview + metrics.totalRejected} of ${metrics.submitted}`}
-                icon={MessageSquare}
-              />
-              <KeyStat
+              <StatTile
                 label="Interview rate"
-                value={`${Math.round(metrics.interviewRate * 100)}%`}
-                hint={`${metrics.totalInterview} interview${metrics.totalInterview === 1 ? "" : "s"}`}
-                icon={TrendingUp}
-                accent={metrics.totalInterview > 0}
+                value={`${interviewPct}%`}
+                tone={metrics.totalInterview > 0 ? "amber" : "default"}
+                caption={`${metrics.totalInterview} interview${metrics.totalInterview === 1 ? "" : "s"}`}
+                display
+                delay={45}
               />
-              <KeyStat
-                label="Avg applied score"
+              <StatTile
+                label="Avg score"
                 value={metrics.avgAppliedScore == null ? "—" : metrics.avgAppliedScore}
-                hint="across submitted apps"
-                icon={Target}
+                tone="default"
+                caption="across submitted apps"
+                display
+                delay={90}
+              />
+              <StatTile
+                label="Submitted"
+                value={metrics.submitted}
+                tone={metrics.submitted > 0 ? "sage" : "default"}
+                caption="all time"
+                display
+                delay={135}
               />
             </div>
-          </aside>
+          </div>
+        </section>
 
-          <main className="min-w-0 space-y-6">
-            <VelocityCard data={velocity} />
+        {/* Asymmetric grid */}
+        <div className="space-y-6">
+          <VelocityCard data={velocity} />
 
-            <FunnelCard metrics={metrics} />
+          <FunnelCard metrics={metrics} />
 
-            <div className="grid grid-cols-1 gap-6 md:grid-cols-[1.4fr_1fr]">
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-12">
+            <div className="md:col-span-7">
               <HistogramCard data={histogram} />
+            </div>
+            <div className="md:col-span-5">
               <SourceCard data={sources} />
             </div>
+          </div>
 
-            <CompaniesCard data={topCompanies} />
-          </main>
+          <CompaniesCard data={topCompanies} />
         </div>
       </div>
     </div>
   );
 }
 
-/* ---------------- Velocity (AreaChart + Tabs) ---------------- */
+/* ── Velocity (AreaChart + Tabs) ── */
 
 function VelocityCard({ data }: { data: Bucket[] }) {
   const [range, setRange] = React.useState<"7" | "30" | "90">("30");
@@ -178,55 +189,38 @@ function VelocityCard({ data }: { data: Bucket[] }) {
   const peak = filtered.reduce((m, p) => (p.count > m.count ? p : m), filtered[0]);
 
   const chartConfig = {
-    count: {
-      label: "Applications",
-      color: EMERALD,
-    },
+    count: { label: "Applications", color: APRICOT },
   } satisfies ChartConfig;
 
   return (
-    <Card className={CARD_CLS}>
-      <CardHeader className="flex flex-col gap-3 border-b border-foreground/5 px-6 py-5 sm:flex-row sm:items-center">
+    <Card className="overflow-hidden">
+      <CardHeader className="flex flex-col gap-3 border-b divider-warm pb-5 sm:flex-row sm:items-center">
         <div className="flex-1">
-          <div className="font-mono text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
-            Volume
-          </div>
-          <CardTitle className="mt-1 text-base font-medium tracking-tight">
-            Apply velocity
-          </CardTitle>
-          <CardDescription className="mt-0.5 text-xs">
+          <Eyebrow>Volume</Eyebrow>
+          <CardTitle className="mt-1 text-[15px]">Apply velocity</CardTitle>
+          <CardDescription className="mt-0.5">
             Daily application count
           </CardDescription>
         </div>
         <Tabs value={range} onValueChange={(v) => setRange(v as "7" | "30" | "90")}>
-          <TabsList className="h-8 rounded-lg bg-foreground/[0.04] p-0.5">
-            <TabsTrigger value="7" className="h-7 rounded-md px-2.5 text-xs">
-              7d
-            </TabsTrigger>
-            <TabsTrigger value="30" className="h-7 rounded-md px-2.5 text-xs">
-              30d
-            </TabsTrigger>
-            <TabsTrigger value="90" className="h-7 rounded-md px-2.5 text-xs">
-              90d
-            </TabsTrigger>
+          <TabsList>
+            <TabsTrigger value="7">7d</TabsTrigger>
+            <TabsTrigger value="30">30d</TabsTrigger>
+            <TabsTrigger value="90">90d</TabsTrigger>
           </TabsList>
         </Tabs>
       </CardHeader>
 
-      <CardContent className="px-2 pb-2 pt-4 sm:px-6 sm:pb-4">
-        <ChartContainer config={chartConfig} className="aspect-auto h-[220px] w-full">
+      <CardContent className="px-2 pt-5 sm:px-5">
+        <ChartContainer config={chartConfig} className="aspect-auto h-[240px] w-full">
           <AreaChart data={filtered} margin={{ left: 0, right: 8, top: 8, bottom: 0 }}>
             <defs>
               <linearGradient id="velocity-fill" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor={EMERALD} stopOpacity={0.35} />
-                <stop offset="95%" stopColor={EMERALD} stopOpacity={0} />
+                <stop offset="0%" stopColor={APRICOT} stopOpacity={0.4} />
+                <stop offset="95%" stopColor={APRICOT} stopOpacity={0} />
               </linearGradient>
             </defs>
-            <CartesianGrid
-              vertical={false}
-              stroke="currentColor"
-              strokeOpacity={0.06}
-            />
+            <CartesianGrid vertical={false} stroke="currentColor" strokeOpacity={0.05} />
             <XAxis
               dataKey="date"
               tickLine={false}
@@ -242,7 +236,7 @@ function VelocityCard({ data }: { data: Bucket[] }) {
               className="font-mono text-[10px] uppercase tracking-wide text-muted-foreground"
             />
             <ChartTooltip
-              cursor={{ stroke: EMERALD_SOFT, strokeWidth: 1, strokeDasharray: "3 3" }}
+              cursor={{ stroke: APRICOT_SOFT, strokeWidth: 1, strokeDasharray: "3 3" }}
               content={
                 <ChartTooltipContent
                   indicator="dot"
@@ -260,22 +254,24 @@ function VelocityCard({ data }: { data: Bucket[] }) {
               dataKey="count"
               type="natural"
               fill="url(#velocity-fill)"
-              stroke={EMERALD}
-              strokeWidth={1.6}
+              stroke={APRICOT}
+              strokeWidth={1.75}
             />
           </AreaChart>
         </ChartContainer>
 
-        <div className="mt-2 flex flex-wrap gap-x-8 gap-y-1 border-t border-foreground/5 pt-3 font-mono text-[11px] uppercase tracking-wide text-muted-foreground">
+        <div className="mt-3 flex flex-wrap gap-x-8 gap-y-1 border-t divider-warm pt-3 font-mono text-[10.5px] uppercase tracking-[0.04em] text-muted-foreground">
           <span>
             Total <span className="ml-1.5 tabular-nums text-foreground">{total}</span>
           </span>
           <span>
-            Avg/day <span className="ml-1.5 tabular-nums text-foreground">{avg.toFixed(1)}</span>
+            Avg/day{" "}
+            <span className="ml-1.5 tabular-nums text-foreground">{avg.toFixed(1)}</span>
           </span>
           {peak && peak.count > 0 && (
             <span>
-              Peak <span className="ml-1.5 tabular-nums text-foreground">{peak.count}</span>{" "}
+              Peak{" "}
+              <span className="ml-1.5 tabular-nums text-foreground">{peak.count}</span>{" "}
               <span className="text-muted-foreground/60">on {shortDate(peak.date)}</span>
             </span>
           )}
@@ -285,11 +281,11 @@ function VelocityCard({ data }: { data: Bucket[] }) {
   );
 }
 
-/* ---------------- Funnel (custom — conversion % between stages) ---------------- */
+/* ── Funnel ── */
 
 function FunnelCard({ metrics }: { metrics: Metrics }) {
   const stages = [
-    { key: "ingested", label: "Ingested", value: metrics.totalAll, accent: false },
+    { key: "ingested", label: "Ingested", value: metrics.totalAll, accent: false as boolean },
     {
       key: "queued",
       label: "Queued",
@@ -311,30 +307,26 @@ function FunnelCard({ metrics }: { metrics: Metrics }) {
   const max = Math.max(1, ...stages.map((s) => s.value));
 
   return (
-    <Card className={CARD_CLS}>
-      <CardHeader className="flex flex-row items-baseline justify-between border-b border-foreground/5 px-6 py-5">
+    <Card>
+      <CardHeader className="flex flex-row items-baseline justify-between border-b divider-warm pb-5">
         <div>
-          <div className="font-mono text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
-            Conversion
-          </div>
-          <CardTitle className="mt-1 text-base font-medium tracking-tight">
-            Pipeline funnel
-          </CardTitle>
+          <Eyebrow>Conversion</Eyebrow>
+          <CardTitle className="mt-1 text-[15px]">Pipeline funnel</CardTitle>
         </div>
-        <span className="font-mono text-[11px] uppercase tracking-wide text-muted-foreground">
+        <span className="font-mono text-[10.5px] uppercase tracking-[0.04em] text-muted-foreground">
           {metrics.totalAll} total
         </span>
       </CardHeader>
-      <CardContent className="space-y-2.5 px-6 py-5">
+      <CardContent className="space-y-3.5 pt-5 pb-5">
         {stages.map((stage, i) => {
           const widthPct = Math.max(stage.value > 0 ? 4 : 0, (stage.value / max) * 100);
           const conv =
-            i > 0 && stages[i - 1].value > 0
-              ? (stage.value / stages[i - 1].value) * 100
+            i > 0 && stages[i - 1]!.value > 0
+              ? (stage.value / stages[i - 1]!.value) * 100
               : null;
           return (
             <div key={stage.key}>
-              <div className="flex items-baseline justify-between font-mono text-[11px] uppercase tracking-wide">
+              <div className="flex items-baseline justify-between font-mono text-[10.5px] uppercase tracking-[0.04em]">
                 <span className="text-foreground">{stage.label}</span>
                 <span className="flex items-baseline gap-3 text-muted-foreground/70">
                   {stage.sub && (
@@ -348,11 +340,11 @@ function FunnelCard({ metrics }: { metrics: Metrics }) {
                   <span className="tabular-nums text-foreground">{stage.value}</span>
                 </span>
               </div>
-              <div className="mt-1.5 h-2 overflow-hidden rounded-full bg-foreground/[0.04]">
+              <div className="mt-2 h-2 overflow-hidden rounded-full bg-foreground/[0.04]">
                 <div
                   className={cn(
-                    "h-full rounded-full transition-[width] duration-700 ease-[cubic-bezier(0.16,1,0.3,1)]",
-                    stage.accent ? "bg-emerald-500/70" : "bg-foreground/20",
+                    "h-full rounded-full transition-[width] duration-700 ease-out",
+                    stage.accent ? "bg-apricot" : "bg-foreground/22",
                   )}
                   style={{ width: `${widthPct}%` }}
                 />
@@ -365,39 +357,30 @@ function FunnelCard({ metrics }: { metrics: Metrics }) {
   );
 }
 
-/* ---------------- Score histogram (BarChart) ---------------- */
+/* ── Histogram ── */
 
 function HistogramCard({ data }: { data: HistoBucket[] }) {
   const total = data.reduce((a, b) => a + b.count, 0);
-
   const chartConfig = {
     count: { label: "Jobs" },
   } satisfies ChartConfig;
 
   return (
-    <Card className={CARD_CLS}>
-      <CardHeader className="border-b border-foreground/5 px-6 py-5">
-        <div className="font-mono text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
-          Quality
-        </div>
-        <CardTitle className="mt-1 text-base font-medium tracking-tight">
-          Score distribution
-        </CardTitle>
-        <CardDescription className="text-xs">
+    <Card className="h-full">
+      <CardHeader className="border-b divider-warm pb-5">
+        <Eyebrow>Quality</Eyebrow>
+        <CardTitle className="mt-1 text-[15px]">Score distribution</CardTitle>
+        <CardDescription>
           Resume-fit scores across all ingested jobs
         </CardDescription>
       </CardHeader>
-      <CardContent className="px-2 pb-4 pt-4 sm:px-6">
+      <CardContent className="px-2 pt-5 sm:px-5">
         {total === 0 ? (
           <EmptyHint>No scored jobs yet.</EmptyHint>
         ) : (
-          <ChartContainer config={chartConfig} className="aspect-auto h-[200px] w-full">
+          <ChartContainer config={chartConfig} className="aspect-auto h-[220px] w-full">
             <BarChart data={data} margin={{ top: 8, right: 8, bottom: 0, left: 0 }}>
-              <CartesianGrid
-                vertical={false}
-                stroke="currentColor"
-                strokeOpacity={0.06}
-              />
+              <CartesianGrid vertical={false} stroke="currentColor" strokeOpacity={0.05} />
               <XAxis
                 dataKey="label"
                 tickLine={false}
@@ -422,12 +405,12 @@ function HistogramCard({ data }: { data: HistoBucket[] }) {
                   />
                 }
               />
-              <Bar dataKey="count" radius={[6, 6, 0, 0]} maxBarSize={56}>
+              <Bar dataKey="count" radius={[8, 8, 0, 0]} maxBarSize={64}>
                 {data.map((d) => (
                   <Cell
                     key={d.label}
-                    fill={d.min >= 80 ? EMERALD : "currentColor"}
-                    fillOpacity={d.min >= 80 ? 0.85 : d.count === 0 ? 0.05 : 0.18}
+                    fill={d.min >= 80 ? APRICOT : d.min >= 60 ? SAGE : "currentColor"}
+                    fillOpacity={d.min >= 60 ? 0.85 : d.count === 0 ? 0.05 : 0.18}
                   />
                 ))}
               </Bar>
@@ -439,7 +422,7 @@ function HistogramCard({ data }: { data: HistoBucket[] }) {
   );
 }
 
-/* ---------------- Sources (donut) ---------------- */
+/* ── Source — horizontal stacked bar instead of pie ── */
 
 function SourceCard({ data }: { data: { source: string; count: number }[] }) {
   const total = React.useMemo(
@@ -447,91 +430,56 @@ function SourceCard({ data }: { data: { source: string; count: number }[] }) {
     [data],
   );
 
-  const chartData = data.map((d, i) => ({
+  const items = data.map((d, i) => ({
     name: SOURCE_LABEL[d.source] ?? d.source,
     value: d.count,
-    fill: i === 0 ? EMERALD : i === 1 ? EMERALD_SOFT : EMERALD_FAINT,
+    color: i === 0 ? APRICOT : i === 1 ? SAGE : APRICOT_FAINT,
   }));
 
-  const chartConfig = {
-    value: { label: "Apps" },
-  } satisfies ChartConfig;
-
   return (
-    <Card className={cn(CARD_CLS, "flex flex-col")}>
-      <CardHeader className="border-b border-foreground/5 px-6 py-5">
-        <div className="font-mono text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
-          Source
-        </div>
-        <CardTitle className="mt-1 text-base font-medium tracking-tight">
-          Where you applied
-        </CardTitle>
+    <Card className="h-full">
+      <CardHeader className="border-b divider-warm pb-5">
+        <Eyebrow>Source</Eyebrow>
+        <CardTitle className="mt-1 text-[15px]">Where you applied</CardTitle>
       </CardHeader>
-      <CardContent className="flex flex-1 flex-col items-stretch px-6 pb-5 pt-4">
+      <CardContent className="pt-5 pb-5">
         {total === 0 ? (
           <EmptyHint>No applications yet.</EmptyHint>
         ) : (
           <>
-            <ChartContainer
-              config={chartConfig}
-              className="mx-auto aspect-square h-[200px]"
-            >
-              <PieChart>
-                <ChartTooltip
-                  cursor={false}
-                  content={<ChartTooltipContent hideLabel />}
+            <div className="mb-1 flex items-baseline justify-between">
+              <span className="font-display text-3xl tabular-nums tracking-tight">
+                {total}
+              </span>
+              <span className="font-mono text-[10.5px] uppercase tracking-[0.16em] text-muted-foreground">
+                applied
+              </span>
+            </div>
+
+            <div className="mt-3 flex h-3 overflow-hidden rounded-full bg-foreground/[0.04]">
+              {items.map((d) => (
+                <div
+                  key={d.name}
+                  className="h-full transition-[width] duration-700 ease-out first:rounded-l-full last:rounded-r-full"
+                  style={{
+                    width: `${(d.value / total) * 100}%`,
+                    background: d.color,
+                  }}
+                  title={`${d.name}: ${d.value}`}
                 />
-                <Pie
-                  data={chartData}
-                  dataKey="value"
-                  nameKey="name"
-                  innerRadius={56}
-                  outerRadius={84}
-                  strokeWidth={2}
-                  stroke="var(--background)"
-                >
-                  <Label
-                    content={({ viewBox }) => {
-                      if (!viewBox || !("cx" in viewBox) || !("cy" in viewBox))
-                        return null;
-                      return (
-                        <text
-                          x={viewBox.cx}
-                          y={viewBox.cy}
-                          textAnchor="middle"
-                          dominantBaseline="middle"
-                        >
-                          <tspan
-                            x={viewBox.cx}
-                            y={viewBox.cy}
-                            className="fill-foreground font-mono text-2xl font-medium tabular-nums"
-                          >
-                            {total}
-                          </tspan>
-                          <tspan
-                            x={viewBox.cx}
-                            y={(viewBox.cy ?? 0) + 18}
-                            className="fill-muted-foreground font-mono text-[9px] uppercase tracking-[0.16em]"
-                          >
-                            applied
-                          </tspan>
-                        </text>
-                      );
-                    }}
-                  />
-                </Pie>
-              </PieChart>
-            </ChartContainer>
-            <ul className="mt-4 space-y-2 border-t border-foreground/5 pt-3">
-              {chartData.map((d) => (
+              ))}
+            </div>
+
+            <ul className="mt-5 space-y-2.5">
+              {items.map((d) => (
                 <li
                   key={d.name}
-                  className="flex items-center justify-between font-mono text-[11px] uppercase tracking-wide"
+                  className="flex items-center justify-between font-mono text-[10.5px] uppercase tracking-[0.04em]"
                 >
-                  <span className="flex items-center gap-2">
+                  <span className="flex items-center gap-2.5">
                     <span
                       className="size-2 rounded-full"
-                      style={{ background: d.fill }}
+                      style={{ background: d.color }}
                     />
                     <span className="text-foreground">{d.name}</span>
                   </span>
@@ -551,33 +499,31 @@ function SourceCard({ data }: { data: { source: string; count: number }[] }) {
   );
 }
 
-/* ---------------- Top companies (divide-y list inside card) ---------------- */
+/* ── Companies ── */
 
 function CompaniesCard({ data }: { data: { company: string; count: number }[] }) {
   return (
-    <Card className={CARD_CLS}>
-      <CardHeader className="border-b border-foreground/5 px-6 py-5">
-        <div className="font-mono text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
-          Companies
-        </div>
-        <CardTitle className="mt-1 text-base font-medium tracking-tight">
-          Most applied
-        </CardTitle>
+    <Card>
+      <CardHeader className="border-b divider-warm pb-5">
+        <Eyebrow>Companies</Eyebrow>
+        <CardTitle className="mt-1 text-[15px]">Most applied</CardTitle>
       </CardHeader>
-      <CardContent className="px-6 py-2">
+      <CardContent className="py-2">
         {data.length === 0 ? (
           <div className="py-3">
-            <EmptyHint>Once you apply, your most-targeted companies show here.</EmptyHint>
+            <EmptyHint>
+              Once you apply, your most-targeted companies show here.
+            </EmptyHint>
           </div>
         ) : (
-          <ul className="divide-y divide-foreground/5">
+          <ul className="divide-y divider-warm">
             {data.map((c) => (
               <li
                 key={c.company}
-                className="flex items-center justify-between py-3 text-sm"
+                className="flex items-center justify-between py-3.5 text-sm"
               >
                 <span className="truncate pr-4 text-foreground">{c.company}</span>
-                <span className="font-mono text-xs tabular-nums text-muted-foreground">
+                <span className="font-mono text-[11px] tabular-nums text-muted-foreground">
                   {c.count}
                 </span>
               </li>
@@ -589,54 +535,19 @@ function CompaniesCard({ data }: { data: { company: string; count: number }[] })
   );
 }
 
-/* ---------------- Shared ---------------- */
+/* ── Shared ── */
 
-function KeyStat({
-  label,
-  value,
-  hint,
-  icon: Icon,
-  accent,
-}: {
-  label: string;
-  value: number | string;
-  hint: string;
-  icon: React.ComponentType<{ className?: string; strokeWidth?: number }>;
-  accent?: boolean;
-}) {
+function Eyebrow({ children }: { children: React.ReactNode }) {
   return (
-    <div className="flex items-start gap-3">
-      <div
-        className={cn(
-          "mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-md border",
-          accent
-            ? "border-emerald-700/20 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400"
-            : "border-foreground/10 bg-foreground/[0.02] text-muted-foreground",
-        )}
-      >
-        <Icon className="size-3.5" strokeWidth={1.75} />
-      </div>
-      <div className="min-w-0 flex-1">
-        <div className="font-mono text-[10px] uppercase tracking-[0.16em] text-muted-foreground">
-          {label}
-        </div>
-        <div
-          className={cn(
-            "mt-0.5 font-mono text-2xl tabular-nums leading-none tracking-tight",
-            accent ? "text-emerald-700 dark:text-emerald-400" : "text-foreground",
-          )}
-        >
-          {value}
-        </div>
-        <div className="mt-1 text-xs text-muted-foreground">{hint}</div>
-      </div>
+    <div className="font-mono text-[10px] uppercase tracking-[0.22em] text-muted-foreground">
+      {children}
     </div>
   );
 }
 
 function EmptyHint({ children }: { children: React.ReactNode }) {
   return (
-    <div className="rounded-lg border border-dashed border-foreground/10 bg-foreground/[0.015] px-4 py-6 text-sm text-muted-foreground">
+    <div className="rounded-xl border border-dashed border-foreground/12 px-4 py-6 text-sm text-muted-foreground">
       {children}
     </div>
   );
@@ -647,70 +558,4 @@ function shortDate(iso: string): string {
   return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
 }
 
-function Topbar({ user }: { user: DashboardUser }) {
-  return (
-    <header className="sticky top-0 z-30 border-b border-foreground/5 bg-background/85 backdrop-blur-md">
-      <div className="mx-auto flex h-14 max-w-[1400px] items-center justify-between gap-6 px-4 md:px-8">
-        <Link href="/dashboard" className="flex items-center gap-2.5">
-          <span className="flex size-7 items-center justify-center rounded-md border border-foreground/10 bg-foreground/[0.03]">
-            <Briefcase className="size-3.5" strokeWidth={1.75} />
-          </span>
-          <span className="text-sm font-medium tracking-tight">Job Tracker</span>
-        </Link>
-
-        <nav className="hidden items-center gap-1 md:flex">
-          <NavLink href="/dashboard">Pipeline</NavLink>
-          <NavLink href="/dashboard/queue">Queue</NavLink>
-          <NavLink href="/analytics" active>
-            Analytics
-          </NavLink>
-          <NavLink href="/settings">Settings</NavLink>
-        </nav>
-
-        <div className="flex items-center gap-3">
-          <Link
-            href="/settings"
-            className="hidden items-center gap-2 rounded-full border border-foreground/8 bg-foreground/[0.015] px-2.5 py-1 transition-colors hover:bg-foreground/[0.04] sm:inline-flex"
-          >
-            {user.image ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={user.image} alt="" className="size-5 rounded-full" />
-            ) : (
-              <span className="flex size-5 items-center justify-center rounded-full bg-foreground/10 font-mono text-[10px] uppercase">
-                {user.email.slice(0, 1)}
-              </span>
-            )}
-            <span className="max-w-[140px] truncate text-xs text-muted-foreground">
-              {user.email}
-            </span>
-            <SettingsIcon className="size-3.5 text-muted-foreground" strokeWidth={1.75} />
-          </Link>
-        </div>
-      </div>
-    </header>
-  );
-}
-
-function NavLink({
-  href,
-  active,
-  children,
-}: {
-  href: string;
-  active?: boolean;
-  children: React.ReactNode;
-}) {
-  return (
-    <Link
-      href={href}
-      className={cn(
-        "rounded-md px-3 py-1.5 text-sm transition-all",
-        active
-          ? "bg-foreground/[0.05] text-foreground"
-          : "text-muted-foreground hover:bg-foreground/[0.04] hover:text-foreground",
-      )}
-    >
-      {children}
-    </Link>
-  );
-}
+export type { Metrics };

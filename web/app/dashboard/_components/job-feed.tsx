@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Search, Loader2, Inbox, ArrowUpDown } from "lucide-react";
+import { Search, Loader2, Inbox } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { JobRow } from "./job-row";
@@ -45,8 +45,8 @@ export function JobFeed({
   const [sort, setSort] = React.useState<Sort>("score");
   const [minScore, setMinScore] = React.useState(0);
   const [total, setTotal] = React.useState<number | null>(null);
+  const skipInitialFetch = React.useRef(initialItems.length > 0);
 
-  // debounce search
   React.useEffect(() => {
     const t = setTimeout(() => setDebouncedQ(q.trim()), 220);
     return () => clearTimeout(t);
@@ -85,6 +85,10 @@ export function JobFeed({
   );
 
   React.useEffect(() => {
+    if (skipInitialFetch.current) {
+      skipInitialFetch.current = false;
+      return;
+    }
     const ctrl = new AbortController();
     fetchItems(ctrl.signal);
     return () => ctrl.abort();
@@ -101,42 +105,43 @@ export function JobFeed({
     <section className="flex flex-col gap-5">
       {/* Filter bar */}
       <div className="flex flex-wrap items-center gap-3">
-        <div className="relative min-w-[240px] flex-1">
+        <div className="relative min-w-[260px] flex-1">
           <Search
-            className="pointer-events-none absolute left-3 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground"
+            className="pointer-events-none absolute left-3.5 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground"
             strokeWidth={1.75}
           />
           <Input
             value={q}
             onChange={(e) => setQ(e.target.value)}
             placeholder="Search title or company"
-            className="h-10 pl-9"
+            className="h-10 pl-9.5"
           />
         </div>
 
-        <div className="inline-flex items-center gap-0 rounded-lg border border-foreground/10 bg-foreground/[0.015] p-0.5">
-          <SortChip active={sort === "score"} onClick={() => setSort("score")}>
+        <div className="inline-flex items-center gap-0.5 rounded-full surface-sunken p-1">
+          <SegmentChip active={sort === "score"} onClick={() => setSort("score")}>
             Score
-          </SortChip>
-          <SortChip active={sort === "fresh"} onClick={() => setSort("fresh")}>
+          </SegmentChip>
+          <SegmentChip active={sort === "fresh"} onClick={() => setSort("fresh")}>
             Fresh
-          </SortChip>
+          </SegmentChip>
         </div>
 
-        <div className="inline-flex items-center gap-0 rounded-lg border border-foreground/10 bg-foreground/[0.015] p-0.5">
+        <div className="inline-flex items-center gap-0.5 rounded-full surface-sunken p-1">
           {[0, 60, 80].map((n) => (
-            <ScoreChip key={n} active={minScore === n} onClick={() => setMinScore(n)}>
+            <SegmentChip
+              key={n}
+              active={minScore === n}
+              mono
+              onClick={() => setMinScore(n)}
+            >
               {n === 0 ? "All" : `${n}+`}
-            </ScoreChip>
+            </SegmentChip>
           ))}
         </div>
 
         <div className="ml-auto flex items-center gap-2 font-mono text-[11px] tabular-nums text-muted-foreground">
-          {loading ? (
-            <Loader2 className="size-3.5 animate-spin" strokeWidth={2} />
-          ) : (
-            <ArrowUpDown className="size-3 text-muted-foreground/50" strokeWidth={1.75} />
-          )}
+          {loading && <Loader2 className="size-3.5 animate-spin" strokeWidth={2} />}
           <span>
             {total === null ? "—" : total} {total === 1 ? "result" : "results"}
           </span>
@@ -151,18 +156,9 @@ export function JobFeed({
       ) : items.length === 0 ? (
         <EmptyState />
       ) : (
-        <ul className="divide-y divide-foreground/5 border-y border-foreground/5">
-          {items.map((item, i) => (
-            <li
-              key={item.id}
-              className="animate-in fade-in slide-in-from-bottom-1"
-              style={{
-                animationDelay: `${Math.min(i, 12) * 35}ms`,
-                animationDuration: "420ms",
-                animationFillMode: "both",
-                animationTimingFunction: "cubic-bezier(0.16, 1, 0.3, 1)",
-              }}
-            >
+        <ul className="flex flex-col gap-2">
+          {items.map((item) => (
+            <li key={item.id}>
               <JobRow item={item} onChange={patchItem} />
             </li>
           ))}
@@ -172,46 +168,25 @@ export function JobFeed({
   );
 }
 
-function SortChip({
+function SegmentChip({
   active,
   onClick,
+  mono,
   children,
 }: {
   active: boolean;
   onClick: () => void;
+  mono?: boolean;
   children: React.ReactNode;
 }) {
   return (
     <button
       onClick={onClick}
       className={cn(
-        "rounded-md px-2.5 py-1 text-xs font-medium transition-all",
+        "rounded-full px-3 py-1.5 text-xs font-medium transition-colors duration-150",
+        mono && "font-mono text-[11px] tabular-nums",
         active
-          ? "bg-background text-foreground shadow-[inset_0_0_0_1px_rgba(0,0,0,0.06)]"
-          : "text-muted-foreground hover:text-foreground",
-      )}
-    >
-      {children}
-    </button>
-  );
-}
-
-function ScoreChip({
-  active,
-  onClick,
-  children,
-}: {
-  active: boolean;
-  onClick: () => void;
-  children: React.ReactNode;
-}) {
-  return (
-    <button
-      onClick={onClick}
-      className={cn(
-        "rounded-md px-2.5 py-1 font-mono text-[11px] tabular-nums transition-all",
-        active
-          ? "bg-background text-foreground shadow-[inset_0_0_0_1px_rgba(0,0,0,0.06)]"
+          ? "bg-card text-foreground shadow-[inset_0_1px_0_oklch(1_0_0/8%),0_2px_8px_-3px_oklch(0_0_0/30%)]"
           : "text-muted-foreground hover:text-foreground",
       )}
     >
@@ -222,15 +197,17 @@ function ScoreChip({
 
 function SkeletonList() {
   return (
-    <ul className="divide-y divide-foreground/5 border-y border-foreground/5">
+    <ul className="flex flex-col gap-2">
       {Array.from({ length: 6 }).map((_, i) => (
-        <li key={i} className="flex items-center gap-4 px-1 py-5">
-          <div className="size-9 shrink-0 animate-pulse rounded-md bg-foreground/[0.04]" />
+        <li
+          key={i}
+          className="flex items-center gap-4 rounded-2xl surface px-4 py-4"
+        >
+          <div className="size-11 shrink-0 animate-pulse rounded-full bg-foreground/4" />
           <div className="flex-1 space-y-2">
-            <div className="h-3.5 w-2/3 animate-pulse rounded bg-foreground/[0.05]" />
-            <div className="h-2.5 w-1/3 animate-pulse rounded bg-foreground/[0.03]" />
+            <div className="h-3.5 w-2/3 animate-pulse rounded bg-foreground/5" />
+            <div className="h-2.5 w-1/3 animate-pulse rounded bg-foreground/3" />
           </div>
-          <div className="hidden h-4 w-12 animate-pulse rounded bg-foreground/[0.04] md:block" />
         </li>
       ))}
     </ul>
@@ -239,15 +216,15 @@ function SkeletonList() {
 
 function EmptyState() {
   return (
-    <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-foreground/10 bg-foreground/[0.01] px-6 py-16 text-center">
-      <span className="flex size-10 items-center justify-center rounded-xl border border-foreground/10 bg-background">
-        <Inbox className="size-4 text-muted-foreground" strokeWidth={1.5} />
+    <div className="flex flex-col items-center justify-center gap-4 rounded-2xl border border-dashed border-foreground/12 bg-foreground/[0.012] px-6 py-20 text-center">
+      <span className="flex size-12 items-center justify-center rounded-2xl surface-sunken">
+        <Inbox className="size-5 text-muted-foreground" strokeWidth={1.5} />
       </span>
       <div>
-        <div className="text-sm font-medium">Nothing here yet</div>
-        <p className="mt-1 max-w-[36ch] text-xs leading-relaxed text-muted-foreground">
-          The scraper runs every two hours. Fresh roles will land here once your resume and AI
-          provider are configured.
+        <div className="font-display text-lg leading-snug">Nothing here yet</div>
+        <p className="mt-1.5 max-w-[40ch] text-[13px] leading-relaxed text-muted-foreground">
+          The scraper runs every two hours. Fresh roles will land here once your
+          resume and AI provider are configured.
         </p>
       </div>
     </div>
@@ -256,7 +233,7 @@ function EmptyState() {
 
 function ErrorState({ message }: { message: string }) {
   return (
-    <div className="rounded-xl border border-destructive/20 bg-destructive/5 px-4 py-3 text-sm text-destructive">
+    <div className="rounded-2xl border border-rose-warm/25 bg-rose-warm/8 px-4 py-3 text-sm text-rose-warm">
       {message}
     </div>
   );
