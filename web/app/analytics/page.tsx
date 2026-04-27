@@ -21,7 +21,11 @@ export default async function AnalyticsPage() {
     _count: { _all: true },
   });
   const countsByStatus: Record<string, number> = {};
-  for (const g of grouped) countsByStatus[g.status] = g._count._all;
+  let totalAll = 0;
+  for (const g of grouped) {
+    countsByStatus[g.status] = g._count._all;
+    totalAll += g._count._all;
+  }
 
   const responses = await prisma.userJob.findMany({
     where: { userId: user.id, appliedAt: { not: null } },
@@ -47,7 +51,6 @@ export default async function AnalyticsPage() {
   const totalNew = countsByStatus["new"] ?? 0;
   const totalQueued = countsByStatus["queued"] ?? 0;
   const totalSkipped = countsByStatus["skipped"] ?? 0;
-  const totalAll = grouped.reduce((acc: number, g) => acc + g._count._all, 0);
 
   const submitted = totalApplied + totalInterview + totalRejected + totalNoResponse;
   const responded = totalInterview + totalRejected;
