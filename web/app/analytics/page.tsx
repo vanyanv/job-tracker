@@ -47,7 +47,7 @@ export default async function AnalyticsPage() {
   const totalNew = countsByStatus["new"] ?? 0;
   const totalQueued = countsByStatus["queued"] ?? 0;
   const totalSkipped = countsByStatus["skipped"] ?? 0;
-  const totalAll = grouped.reduce((acc, g) => acc + g._count._all, 0);
+  const totalAll = grouped.reduce((acc: number, g) => acc + g._count._all, 0);
 
   const submitted = totalApplied + totalInterview + totalRejected + totalNoResponse;
   const responded = totalInterview + totalRejected;
