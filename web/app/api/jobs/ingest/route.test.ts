@@ -3,7 +3,7 @@ import { NextRequest } from "next/server";
 
 vi.mock("@/lib/prisma", () => ({
   prisma: {
-    job: { findMany: vi.fn(), upsert: vi.fn() },
+    job: { findMany: vi.fn(), upsert: vi.fn(), update: vi.fn() },
     userJob: { createMany: vi.fn(), findMany: vi.fn(), update: vi.fn() },
     user: { findMany: vi.fn() },
   },
@@ -14,7 +14,17 @@ vi.mock("@/lib/ai/provider", () => ({
   getProvider: vi.fn(() => ({ scoreJob: mockScoreJob })),
 }));
 
+vi.mock("@/lib/ai/tagger", () => ({
+  tagJob: vi.fn().mockResolvedValue({
+    level: "senior", workMode: "remote",
+    locationCity: "New York", locationCountry: "US",
+    salaryMin: 180000, salaryMax: 240000, minYoE: 5,
+    stackTags: ["react", "typescript"],
+  }),
+}));
+
 import { POST } from "./route";
+import { tagAndUpdateNewJobs } from "./tagger-pass";
 import { prisma } from "@/lib/prisma";
 
 const VALID_TOKEN = "test-token-abc123";
@@ -42,6 +52,7 @@ function makeRequest(body: unknown, token?: string): NextRequest {
 beforeEach(() => {
   vi.clearAllMocks();
   process.env.INGEST_BEARER_TOKEN = VALID_TOKEN;
+  delete process.env.SYSTEM_AI_API_KEY; // ensure tagger is skipped in POST tests
   (prisma.job.findMany as ReturnType<typeof vi.fn>).mockResolvedValue([]);
   (prisma.job.upsert as ReturnType<typeof vi.fn>).mockResolvedValue({ id: "job-1", url: VALID_JOB.url });
   (prisma.user.findMany as ReturnType<typeof vi.fn>).mockResolvedValue([]);
@@ -205,5 +216,24 @@ describe("POST /api/jobs/ingest — response shape", () => {
       userJobsScored: expect.any(Number),
       errors: expect.any(Array),
     });
+  });
+});
+
+describe("tagAndUpdateNewJobs", () => {
+  it("calls tagger and persists fields", async () => {
+    const update = vi.fn().mockResolvedValue({});
+    const findMany = vi.fn().mockResolvedValue([
+      { id: "j1", title: "Sr FE", company: "Acme", location: "NYC", description: "..." },
+    ]);
+    const fakePrisma = { job: { findMany, update } } as never;
+    await tagAndUpdateNewJobs(fakePrisma, new Set(["j1"]), { apiKey: "k", model: "llama-3.3-70b-versatile" });
+    expect(update).toHaveBeenCalledWith(expect.objectContaining({
+      where: { id: "j1" },
+      data: expect.objectContaining({
+        level: "senior", workMode: "remote",
+        salaryMin: 180000, stackTags: ["react", "typescript"],
+        taggedAt: expect.any(Date), tagModel: "llama-3.3-70b-versatile",
+      }),
+    }));
   });
 });

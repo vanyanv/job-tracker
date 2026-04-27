@@ -5,6 +5,9 @@ import { prisma } from "@/lib/prisma";
 import { getProvider } from "@/lib/ai/provider";
 import type { ResumeProfile } from "@/lib/ai/provider";
 import { IngestBodySchema, type JobRecord } from "./schema";
+import { tagAndUpdateNewJobs } from "./tagger-pass";
+
+const SYSTEM_AI_MODEL = "llama-3.3-70b-versatile";
 
 type IngestError = { context: string; error: string };
 type EligibleUser = {
@@ -171,6 +174,12 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   const { jobs: records } = parsed.data;
   const { allJobIds, newJobIds } = await upsertJobs(records);
 
+  const systemAiKey = process.env.SYSTEM_AI_API_KEY;
+  const taggerStats = systemAiKey
+    ? await tagAndUpdateNewJobs(prisma, newJobIds, { apiKey: systemAiKey, model: SYSTEM_AI_MODEL })
+    : { tagged: 0, failed: 0 };
+  if (!systemAiKey) console.warn("[ingest] SYSTEM_AI_API_KEY unset; skipping tagger");
+
   const eligibleRaw = await prisma.user.findMany({
     where: { skillsProfile: { not: null } },
     select: { id: true, aiProvider: true, aiApiKey: true, skillsProfile: true },
@@ -210,6 +219,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     jobsExisting: allJobIds.size - newJobIds.size,
     userJobsCreated: totalUserJobsCreated,
     userJobsScored: totalUserJobsScored,
+    taggerStats,
     errors,
   });
 }
