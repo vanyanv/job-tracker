@@ -9,11 +9,6 @@ vi.mock("@/lib/prisma", () => ({
   },
 }));
 
-const mockScoreJob = vi.fn();
-vi.mock("@/lib/ai/provider", () => ({
-  getProvider: vi.fn(() => ({ scoreJob: mockScoreJob })),
-}));
-
 vi.mock("@/lib/ai/tagger", () => ({
   tagJob: vi.fn().mockResolvedValue({
     level: "senior", workMode: "remote",
@@ -21,6 +16,11 @@ vi.mock("@/lib/ai/tagger", () => ({
     salaryMin: 180000, salaryMax: 240000, minYoE: 5,
     stackTags: ["react", "typescript"],
   }),
+}));
+
+const mockScoreJob = vi.fn();
+vi.mock("@/lib/ai/provider", () => ({
+  getProvider: vi.fn(() => ({ scoreJob: mockScoreJob })),
 }));
 
 import { POST } from "./route";
