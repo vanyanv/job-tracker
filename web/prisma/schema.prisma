@@ -8,51 +8,87 @@ datasource db {
 }
 
 model Job {
-  id          String    @id @default(cuid())
-  title       String
-  company     String
-  url         String    @unique
-  source      String
-  location    String
-  description String?
-  postedAt    DateTime
-  foundAt     DateTime  @default(now())
-  snapshotUrl String?
-  userJobs    UserJob[]
+  id              String    @id @default(cuid())
+  title           String
+  company         String
+  url             String    @unique
+  source          String
+  location        String
+  description     String?
+  postedAt        DateTime
+  foundAt         DateTime  @default(now())
+  snapshotUrl     String?
+
+  // AI-tagged fields (nullable until taggedAt is set)
+  level           String?   // intern|junior|mid|senior|staff|principal|manager|director|unknown
+  workMode        String?   // remote|hybrid|onsite|unknown
+  locationCity    String?
+  locationCountry String?
+  salaryMin       Int?
+  salaryMax       Int?
+  minYoE          Int?
+  stackTags       String[]  @default([])
+  taggedAt        DateTime?
+  tagModel        String?
+
+  userJobs        UserJob[]
+
+  @@index([postedAt])
+  @@index([level])
+  @@index([workMode])
+  @@index([locationCountry])
+  @@index([level, workMode, postedAt])
+  @@index([stackTags], type: Gin)
 }
 
 model UserJob {
-  id          String    @id @default(cuid())
-  userId      String
-  jobId       String
-  score       Int?
-  scoreReason String?
-  status      String    @default("new")
-  appliedAt   DateTime?
-  emailNote   String?
-  user        User      @relation(fields: [userId], references: [id])
-  job         Job       @relation(fields: [jobId], references: [id])
+  id                String    @id @default(cuid())
+  userId            String
+  jobId             String
+  score             Int?
+  scoreReason       String?
+  status            String    @default("new")
+  appliedAt         DateTime?
+  emailNote         String?
+  autoSkippedReason String?
+  user              User      @relation(fields: [userId], references: [id])
+  job               Job       @relation(fields: [jobId], references: [id])
 
   @@unique([userId, jobId])
 }
 
+model SavedSearch {
+  id        String   @id @default(cuid())
+  userId    String
+  name      String
+  filters   Json
+  sortIndex Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, sortIndex])
+}
+
 model User {
-  id            String    @id @default(cuid())
-  email         String    @unique
-  name          String?
-  image         String?
-  emailVerified DateTime?
-  gmailToken    String?
-  aiProvider    String?
-  aiApiKey      String?
-  resumeUrl     String?
-  resumeText    String?
-  resumeParsed  Json?
-  skillsProfile String?
-  apiKey        String    @unique @default(cuid())
-  userJobs      UserJob[]
-  accounts      Account[]
-  sessions      Session[]
+  id               String        @id @default(cuid())
+  email            String        @unique
+  name             String?
+  image            String?
+  emailVerified    DateTime?
+  gmailToken       String?
+  aiProvider       String?
+  aiApiKey         String?
+  resumeUrl        String?
+  resumeText       String?
+  resumeParsed     Json?
+  skillsProfile    String?
+  apiKey           String        @unique @default(cuid())
+  hiddenCompanies  String[]      @default([])
+  userJobs         UserJob[]
+  savedSearches    SavedSearch[]
+  accounts         Account[]
+  sessions         Session[]
 }
 
 model Account {
