@@ -49,3 +49,29 @@ export async function scrapeGreenhouse(): Promise<JobRecord[]> {
   );
   return results.flat();
 }
+
+export async function fetchOneGreenhouse(
+  org: string,
+  jobId: string,
+  company?: string,
+): Promise<JobRecord | null> {
+  const url = `https://boards-api.greenhouse.io/v1/boards/${org}/jobs/${jobId}?content=true`;
+  try {
+    const res = await fetch(url, { signal: AbortSignal.timeout(10_000) });
+    if (!res.ok) return null;
+    const j = (await res.json()) as GreenhouseJob;
+    if (!j.updated_at || !j.absolute_url || !j.title) return null;
+    return {
+      url: j.absolute_url,
+      title: j.title,
+      company: company ?? orgToCompany(org),
+      location: j.location?.name ?? "",
+      description: stripHtml(j.content ?? ""),
+      source: "greenhouse",
+      postedAt: new Date(j.updated_at).toISOString(),
+      snapshotUrl: null,
+    };
+  } catch {
+    return null;
+  }
+}

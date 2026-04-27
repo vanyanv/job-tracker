@@ -44,3 +44,29 @@ export async function scrapeLever(): Promise<JobRecord[]> {
   );
   return results.flat();
 }
+
+export async function fetchOneLever(
+  org: string,
+  jobId: string,
+  company?: string,
+): Promise<JobRecord | null> {
+  const url = `https://api.lever.co/v0/postings/${org}/${jobId}?mode=json`;
+  try {
+    const res = await fetch(url, { signal: AbortSignal.timeout(10_000) });
+    if (!res.ok) return null;
+    const p = (await res.json()) as LeverPosting;
+    if (!p.createdAt || !p.hostedUrl || !p.text) return null;
+    return {
+      url: p.hostedUrl,
+      title: p.text,
+      company: company ?? orgToCompany(org),
+      location: p.categories?.location ?? "",
+      description: p.descriptionPlain ?? null,
+      source: "lever",
+      postedAt: new Date(p.createdAt).toISOString(),
+      snapshotUrl: null,
+    };
+  } catch {
+    return null;
+  }
+}
